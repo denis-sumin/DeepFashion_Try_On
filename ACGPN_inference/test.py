@@ -63,8 +63,8 @@ def changearm(old_label):
     label=label*(1-arm2)+arm2*4
     label=label*(1-noise)+noise*4
     return label
-os.makedirs('sample',exist_ok=True)
 opt = TrainOptions().parse()
+os.makedirs(opt.results_dir,exist_ok=True)
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, 'iter.txt')
 if opt.continue_train:
     try:
@@ -184,9 +184,9 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             rgb=(cv_img*255).astype(np.uint8)
             bgr=cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR)
             n=str(step)+'.jpg'
-            cv2.imwrite('sample/'+data['name'][0],bgr)
+            cv2.imwrite(opt.results_dir+'/'+data['name'][0],bgr)
         step += 1
-        print(step)
+        print(step, time.time() - epoch_start_time, (time.time() - epoch_start_time) / step)
         ### save latest model
         if total_steps % opt.save_latest_freq == save_delta:
             # print('saving the latest model (epoch %d, total_steps %d)' % (epoch, total_steps))
