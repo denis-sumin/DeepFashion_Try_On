@@ -26,7 +26,10 @@ os.makedirs(cloth_photo_dir, exist_ok=True)
 paths_map = {}
 
 counter = 0
-for key, item in products_tops.items():
+dataset_target_items = min(dataset_target_items, len(products_tops))
+for idx, (key, item) in enumerate(products_tops.items()):
+    print(f"{idx} / {dataset_target_items}", end="\r")
+
     item_media = item["media_metadata"][0]
     category = str(item.get("tryon", {}).get("category", "__no_tryon"))
 
