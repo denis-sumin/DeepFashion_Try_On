@@ -51,7 +51,7 @@ def process_one_item(item):
                                            f"{person_image_2_id}_{os.path.split(person_image_2_url)[-1]}")
         try:
             person_image_2 = imageio.imread(person_image_2_path)
-        except OSError:
+        except (OSError, ValueError):
             pass
         else:
             person_image_2 = cv2.resize(person_image_2, dsize=(192, 256), interpolation=cv2.INTER_AREA)
