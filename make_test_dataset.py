@@ -66,9 +66,15 @@ dataset_target_items = int(sys.argv[4])
 with open(all_products_file, "r") as f:
     all_products = json.load(f)
 
+category = "tops"
+gender = "female"
+
 products_tops = {
     key: value for key, value in all_products.items()
-    if value["tryon"]["category"] == "tops"
+    if (
+            value["tryon"]["category"] == category and
+            value["gender"] == gender
+    )
 }
 
 model_photo_dir = os.path.join(dataset_target_root, "train_img")
