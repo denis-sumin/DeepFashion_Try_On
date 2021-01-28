@@ -18,13 +18,19 @@ def process_one_item(item):
     cloth_image_id = item_media["display_images_order"][0]
     cloth_image_url = item_media["display_images"][cloth_image_id]
     cloth_image_path = os.path.join(src_dataset_dir, f"{cloth_image_id}_{os.path.split(cloth_image_url)[-1]}")
-    cloth_image = imageio.imread(cloth_image_path)
+    try:
+        cloth_image = imageio.imread(cloth_image_path)
+    except OSError:
+        return key, None
     cloth_image = cv2.resize(cloth_image, dsize=(192, 256), interpolation=cv2.INTER_AREA)
 
     person_image_1_id = item_media["display_images_order"][1]
     person_image_1_url = item_media["display_images"][person_image_1_id]
     person_image_1_path = os.path.join(src_dataset_dir, f"{person_image_1_id}_{os.path.split(person_image_1_url)[-1]}")
-    person_image_1 = imageio.imread(person_image_1_path)
+    try:
+        person_image_1 = imageio.imread(person_image_1_path)
+    except OSError:
+        return key, None
     person_image_1 = cv2.resize(person_image_1, dsize=(192, 256), interpolation=cv2.INTER_AREA)
     imageio.imwrite(os.path.join(model_photo_dir, f"{key}_0.jpg"), person_image_1, quality=97)
     imageio.imwrite(os.path.join(cloth_photo_dir, f"{key}_0.jpg"), cloth_image, quality=97)
@@ -43,17 +49,21 @@ def process_one_item(item):
         person_image_2_url = item_media["display_images"][person_image_2_id]
         person_image_2_path = os.path.join(src_dataset_dir,
                                            f"{person_image_2_id}_{os.path.split(person_image_2_url)[-1]}")
-        person_image_2 = imageio.imread(person_image_2_path)
-        person_image_2 = cv2.resize(person_image_2, dsize=(192, 256), interpolation=cv2.INTER_AREA)
-        imageio.imwrite(os.path.join(model_photo_dir, f"{key}_1.jpg"), person_image_2, quality=97)
-        imageio.imwrite(os.path.join(cloth_photo_dir, f"{key}_1.jpg"), cloth_image, quality=97)
+        try:
+            person_image_2 = imageio.imread(person_image_2_path)
+        except OSError:
+            pass
+        else:
+            person_image_2 = cv2.resize(person_image_2, dsize=(192, 256), interpolation=cv2.INTER_AREA)
+            imageio.imwrite(os.path.join(model_photo_dir, f"{key}_1.jpg"), person_image_2, quality=97)
+            imageio.imwrite(os.path.join(cloth_photo_dir, f"{key}_1.jpg"), cloth_image, quality=97)
 
-        result_item["1"] = {
-            "cloth_path_src": cloth_image_path,
-            "person_image_path": person_image_1_path,
-            "cloth_path_dst": os.path.join(cloth_photo_dir, f"{key}_1.jpg"),
-            "person_path_dst": os.path.join(model_photo_dir, f"{key}_1.jpg"),
-        }
+            result_item["1"] = {
+                "cloth_path_src": cloth_image_path,
+                "person_image_path": person_image_1_path,
+                "cloth_path_dst": os.path.join(cloth_photo_dir, f"{key}_1.jpg"),
+                "person_path_dst": os.path.join(model_photo_dir, f"{key}_1.jpg"),
+            }
 
     return key, result_item
 
@@ -94,6 +104,8 @@ with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
     paths_map = {}
     for idx, (key, result_item) in enumerate(results):
         print(f"{idx} / {dataset_target_items}", end="\r")
+        if result_item is None:
+            continue
         paths_map[key] = result_item
 
 with open("dataset_paths_map.json", "w") as f:
