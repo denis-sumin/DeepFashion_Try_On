@@ -83,7 +83,7 @@ products_tops = {
 }
 
 with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
-    results = pool.imap_unordered(products_tops.items())
+    results = pool.imap_unordered(process_one_item, products_tops.items())
 
     paths_map = {}
     for idx, (key, result_item) in enumerate(results):
