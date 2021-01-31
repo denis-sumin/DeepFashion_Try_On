@@ -4,7 +4,7 @@ import multiprocessing
 import os
 import subprocess
 from functools import partial
-from typing import Callable, Sequence, Tuple
+from typing import Callable, Sequence, Tuple, Set
 
 import cv2
 import imageio
@@ -119,9 +119,9 @@ def process_one_pose_file(src_path: str, dst_path: str) -> None:
         print(f"IndexError: pose_data['people'][0] element doesn't exist in {src_path}")
     except KeyError as e:
         print(f"KeyError: {e} in {src_path}")
-
-    with open(dst_path, "w") as f:
-        json.dump(pose_data, f)
+    else:
+        with open(dst_path, "w") as f:
+            json.dump(pose_data, f)
 
 
 def process_one_file_star(func: Callable, arg: Tuple[str, str]) -> None:
@@ -161,12 +161,60 @@ def process_pose_files(src_dir: str, dst_dir: str) -> None:
     process_many_files(process_one_pose_file, src_dir, dst_dir, (".json",), ".json")
 
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        description="")
+def check_dataset_aligned(dirs: Sequence[str]) -> Set[str]:
+    filenames = dict()
+    for dir_path in dirs:
+        filenames[dir_path] = set(os.listdir(dir_path))
 
+    all_filenames = set()
+    for filenames_ in filenames.values():
+        all_filenames.update(filenames_)
+
+    filenames_removed = set()
+    for filename in all_filenames:
+        remove_filename = False
+        for dir_path in dirs:
+            if filename not in filenames[dir_path]:
+                remove_filename = True
+                break
+        if remove_filename:
+            for dir_path in dirs:
+                if filename in filenames[dir_path]:
+                    os.remove(os.path.join(dir_path, filename))
+            filenames_removed.add(filename)
+
+    return all_filenames.difference(filenames_removed)
+
+
+def make_index(output_file_path: str, filenames: Sequence[str],
+               cloths_img_dir: str, models_img_dir: str, pose_dst_dir: str,
+               labels_dst_dir: str, edges_dst_dir: str,) -> None:
+
+    output_file_parent_path = os.path.split(output_file_path)[0]
+    cloths_img_dir = cloths_img_dir.replace(output_file_parent_path, "./")
+    edges_dst_dir = edges_dst_dir.replace(output_file_parent_path, "./")
+    models_img_dir = models_img_dir.replace(output_file_parent_path, "./")
+    pose_dst_dir = pose_dst_dir.replace(output_file_parent_path, "./")
+    labels_dst_dir = labels_dst_dir.replace(output_file_parent_path, "./")
+
+    with open(output_file_path, "w") as f:
+        f.write(f"<table>" + "\n")
+        for filename in filenames:
+            f.write(f"<tr>" + "\n")
+            f.write(f"<td><img src='{os.path.join(cloths_img_dir, filename)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(edges_dst_dir, filename)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(models_img_dir, filename)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(pose_dst_dir, filename)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(labels_dst_dir, filename)}'></td>" + "\n")
+            f.write(f"</tr>" + "\n")
+        f.write(f"</table>" + "\n")
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="")
     parser.add_argument("-d", "--dataset-dir", dest="dataset_dir", type=str, required=True)
     parser.add_argument("-p", "--prefix", dest="prefix", type=str, choices=["train", "test"], required=True)
+    parser.add_argument("--make-index", dest="make_index", type=int, default=0)
     return parser.parse_args()
 
 
@@ -195,6 +243,25 @@ def main():
     print("Generating cloths masks...")
     edges_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge"))
     prepare_cloth_masks(cloths_img_dir, edges_dst_dir)
+
+    dataset_filenames_set = check_dataset_aligned([
+        cloths_img_dir,
+        models_img_dir,
+        pose_dst_dir,
+        labels_dst_dir,
+        edges_dst_dir,
+    ])
+
+    if args.make_index > 0:
+        make_index(
+            output_file_path=os.path.join(args.dataset, f"index_{args.prefix}.html"),
+            filenames=list(dataset_filenames_set)[:args.make_index],
+            cloths_img_dir=cloths_img_dir,
+            models_img_dir=models_img_dir,
+            pose_dst_dir=pose_dst_dir,
+            labels_dst_dir=labels_dst_dir,
+            edges_dst_dir=edges_dst_dir,
+        )
 
 
 if __name__ == "__main__":
