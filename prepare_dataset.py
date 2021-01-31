@@ -22,7 +22,7 @@ def run_segmentation(source_images_dir: str, dst_dir: str):
         "LD_LIBRARY_PATH": "/usr/local/cuda-10.0/lib64"
     }
     cmd = [
-        "./venv/bin/python simple_extractor.py",
+        "./venv/bin/python", "simple_extractor.py",
         "--dataset", "lip",
         "--model-restore", "checkpoints/lip.pth",
         "--input-dir", source_images_dir,
@@ -44,13 +44,13 @@ def main():
     args = get_args()
 
     print("Running openpose...")
-    openpose_src_dir = os.path.join(args.dataset_dir, f"{args.prefix}_img")
-    openpose_dst_dir = os.path.join(args.dataset_dir, f"{args.prefix}_pose")
+    openpose_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
+    openpose_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose"))
     run_openpose(openpose_src_dir, openpose_dst_dir)
 
     print("Running human segmentation...")
-    openpose_src_dir = os.path.join(args.dataset_dir, f"{args.prefix}_img")
-    openpose_dst_dir = os.path.join(args.dataset_dir, f"{args.prefix}_label")
+    openpose_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
+    openpose_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
     run_segmentation(openpose_src_dir, openpose_dst_dir)
 
 
