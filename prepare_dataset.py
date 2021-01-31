@@ -140,7 +140,7 @@ def process_many_files(function: Callable, src_dir: str, dst_dir: str,
     ]
 
     items_count = len(filenames)
-    print_every = int(0.01 * items_count)
+    print_every = max(1, int(0.01 * items_count))
     with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
         for idx, _ in enumerate(pool.imap_unordered(
                 partial(process_one_file_star, function), filenames
@@ -248,7 +248,7 @@ def main():
 
     print("Processing label files...")
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
-    process_pose_files(labels_src_dir, labels_dst_dir)
+    process_label_files(labels_src_dir, labels_dst_dir)
 
     print("Generating cloths masks...")
     edges_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge"))
