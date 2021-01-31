@@ -19,6 +19,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
 def run_segmentation(source_images_dir: str, dst_dir: str):
     cwd = "/root/Self-Correction-Human-Parsing"
     env = {
+        "PATH": "/usr/local/bin:/usr/bin",
         "LD_LIBRARY_PATH": "/usr/local/cuda-10.0/lib64"
     }
     cmd = [
