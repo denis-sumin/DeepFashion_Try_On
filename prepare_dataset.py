@@ -189,33 +189,33 @@ def check_dataset_aligned(dirs: Sequence[Tuple[str, str]]) -> Set[str]:
 
 
 def make_index(output_file_path: str, filenames: Sequence[str],
-               cloths_img_dir: Tuple[str, str], models_img_dir: Tuple[str, str],
-               pose_dst_dir: Tuple[str, str], labels_dst_dir: Tuple[str, str],
-               edges_dst_dir: Tuple[str, str],) -> None:
+               cloths: Tuple[str, str], models: Tuple[str, str],
+               pose: Tuple[str, str], labels: Tuple[str, str],
+               edges: Tuple[str, str],) -> None:
 
     output_file_parent_path = os.path.split(output_file_path)[0]
 
-    cloths_img_dir, cloths_img_suffix = cloths_img_dir
-    edges_dst_dir, edges_suffix = edges_dst_dir
-    models_img_dir, models_suffix = models_img_dir
-    pose_dst_dir, pose_suffix = pose_dst_dir
-    labels_dst_dir, labels_suffix = labels_dst_dir
+    cloths, cloths_img_suffix = cloths
+    edges, edges_suffix = edges
+    models, models_suffix = models
+    pose, pose_suffix = pose
+    labels, labels_suffix = labels
 
-    cloths_img_dir = cloths_img_dir.replace(output_file_parent_path, "./")
-    edges_dst_dir = edges_dst_dir.replace(output_file_parent_path, "./")
-    models_img_dir = models_img_dir.replace(output_file_parent_path, "./")
-    pose_dst_dir = pose_dst_dir.replace(output_file_parent_path, "./")
-    labels_dst_dir = labels_dst_dir.replace(output_file_parent_path, "./")
+    cloths = cloths.replace(output_file_parent_path, "./")
+    edges = edges.replace(output_file_parent_path, "./")
+    models = models.replace(output_file_parent_path, "./")
+    pose = pose.replace(output_file_parent_path, "./")
+    labels = labels.replace(output_file_parent_path, "./")
 
     with open(output_file_path, "w") as f:
         f.write(f"<table>" + "\n")
         for filename in filenames:
             f.write(f"<tr>" + "\n")
-            f.write(f"<td><img src='{os.path.join(cloths_img_dir, filename + cloths_img_suffix)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(edges_dst_dir, filename + edges_suffix)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(models_img_dir, filename + models_suffix)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(pose_dst_dir, filename + pose_suffix)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(labels_dst_dir, filename + labels_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(cloths, filename + cloths_img_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(edges, filename + edges_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(models, filename + models_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(pose, filename + pose_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(labels, filename + labels_suffix)}'></td>" + "\n")
             f.write(f"</tr>" + "\n")
         f.write(f"</table>" + "\n")
 
@@ -255,14 +255,16 @@ def main():
     prepare_cloth_masks(cloths_img_dir, edges_dst_dir)
 
     dirs_suffix = {
-        "cloths_img_dir": (cloths_img_dir, ".jpg"),
-        "models_img_dir": (models_img_dir, ".jpg"),
-        "pose_dst_dir": (pose_dst_dir, "_keypoints.json"),
-        "labels_dst_dir": (labels_dst_dir, ".png"),
-        "edges_dst_dir": (edges_dst_dir, ".jpg"),
+        "cloths": (cloths_img_dir, ".jpg"),
+        "models": (models_img_dir, ".jpg"),
+        "pose": (pose_dst_dir, "_keypoints.json"),
+        "labels": (labels_dst_dir, ".png"),
+        "edges": (edges_dst_dir, ".jpg"),
     }
 
     dataset_filenames_set = check_dataset_aligned(list(dirs_suffix.values()))
+
+    dirs_suffix["pose"] = (openpose_src_dir, "_rendered.png")
 
     if args.make_index > 0:
         make_index(
