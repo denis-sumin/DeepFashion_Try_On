@@ -150,7 +150,7 @@ def process_many_files(function: Callable, src_dir: str, dst_dir: str,
 
 
 def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
-    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".png")
+    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".jpg")
 
 
 def process_label_files(src_dir: str, dst_dir: str) -> None:
@@ -161,10 +161,10 @@ def process_pose_files(src_dir: str, dst_dir: str) -> None:
     process_many_files(process_one_pose_file, src_dir, dst_dir, (".json",), ".json")
 
 
-def check_dataset_aligned(dirs: Sequence[str]) -> Set[str]:
+def check_dataset_aligned(dirs: Sequence[Tuple[str, str]]) -> Set[str]:
     filenames = dict()
-    for dir_path in dirs:
-        filenames[dir_path] = set(os.listdir(dir_path))
+    for dir_path, suffix in dirs:
+        filenames[dir_path] = set((item.replace(suffix, "") for item in os.listdir(dir_path)))
 
     all_filenames = set()
     for filenames_ in filenames.values():
@@ -173,25 +173,34 @@ def check_dataset_aligned(dirs: Sequence[str]) -> Set[str]:
     filenames_removed = set()
     for filename in all_filenames:
         remove_filename = False
-        for dir_path in dirs:
+        for dir_path, suffix in dirs:
             if filename not in filenames[dir_path]:
                 remove_filename = True
                 break
         if remove_filename:
-            for dir_path in dirs:
+            for dir_path, suffix in dirs:
                 if filename in filenames[dir_path]:
-                    os.remove(os.path.join(dir_path, filename))
-                    print(f"Removed file {filename} from {dir_path}")
+                    filename_this = filename + suffix
+                    os.remove(os.path.join(dir_path, filename_this))
+                    print(f"Removed file {filename_this} from {dir_path}")
             filenames_removed.add(filename)
 
     return all_filenames.difference(filenames_removed)
 
 
 def make_index(output_file_path: str, filenames: Sequence[str],
-               cloths_img_dir: str, models_img_dir: str, pose_dst_dir: str,
-               labels_dst_dir: str, edges_dst_dir: str,) -> None:
+               cloths_img_dir: Tuple[str, str], models_img_dir: Tuple[str, str],
+               pose_dst_dir: Tuple[str, str], labels_dst_dir: Tuple[str, str],
+               edges_dst_dir: Tuple[str, str],) -> None:
 
     output_file_parent_path = os.path.split(output_file_path)[0]
+
+    cloths_img_dir, cloths_img_suffix = cloths_img_dir
+    edges_dst_dir, edges_suffix = edges_dst_dir
+    models_img_dir, models_suffix = models_img_dir
+    pose_dst_dir, pose_suffix = pose_dst_dir
+    labels_dst_dir, labels_suffix = labels_dst_dir
+
     cloths_img_dir = cloths_img_dir.replace(output_file_parent_path, "./")
     edges_dst_dir = edges_dst_dir.replace(output_file_parent_path, "./")
     models_img_dir = models_img_dir.replace(output_file_parent_path, "./")
@@ -202,11 +211,11 @@ def make_index(output_file_path: str, filenames: Sequence[str],
         f.write(f"<table>" + "\n")
         for filename in filenames:
             f.write(f"<tr>" + "\n")
-            f.write(f"<td><img src='{os.path.join(cloths_img_dir, filename)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(edges_dst_dir, filename)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(models_img_dir, filename)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(pose_dst_dir, filename)}'></td>" + "\n")
-            f.write(f"<td><img src='{os.path.join(labels_dst_dir, filename)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(cloths_img_dir, filename + cloths_img_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(edges_dst_dir, filename + edges_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(models_img_dir, filename + models_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(pose_dst_dir, filename + pose_suffix)}'></td>" + "\n")
+            f.write(f"<td><img src='{os.path.join(labels_dst_dir, filename + labels_suffix)}'></td>" + "\n")
             f.write(f"</tr>" + "\n")
         f.write(f"</table>" + "\n")
 
@@ -245,23 +254,21 @@ def main():
     edges_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge"))
     prepare_cloth_masks(cloths_img_dir, edges_dst_dir)
 
-    dataset_filenames_set = check_dataset_aligned([
-        cloths_img_dir,
-        models_img_dir,
-        pose_dst_dir,
-        labels_dst_dir,
-        edges_dst_dir,
-    ])
+    dirs_suffix = {
+        "cloths_img_dir": (cloths_img_dir, ".jpg"),
+        "models_img_dir": (models_img_dir, ".jpg"),
+        "pose_dst_dir": (pose_dst_dir, "_keypoints.json"),
+        "labels_dst_dir": (labels_dst_dir, ".png"),
+        "edges_dst_dir": (edges_dst_dir, ".jpg"),
+    }
+
+    dataset_filenames_set = check_dataset_aligned(list(dirs_suffix.values()))
 
     if args.make_index > 0:
         make_index(
             output_file_path=os.path.join(args.dataset_dir, f"index_{args.prefix}.html"),
             filenames=list(dataset_filenames_set)[:args.make_index],
-            cloths_img_dir=cloths_img_dir,
-            models_img_dir=models_img_dir,
-            pose_dst_dir=pose_dst_dir,
-            labels_dst_dir=labels_dst_dir,
-            edges_dst_dir=edges_dst_dir,
+            **dirs_suffix
         )
 
 
