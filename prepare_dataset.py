@@ -181,6 +181,7 @@ def check_dataset_aligned(dirs: Sequence[str]) -> Set[str]:
             for dir_path in dirs:
                 if filename in filenames[dir_path]:
                     os.remove(os.path.join(dir_path, filename))
+                    print(f"Removed file {filename} from {dir_path}")
             filenames_removed.add(filename)
 
     return all_filenames.difference(filenames_removed)
@@ -254,7 +255,7 @@ def main():
 
     if args.make_index > 0:
         make_index(
-            output_file_path=os.path.join(args.dataset, f"index_{args.prefix}.html"),
+            output_file_path=os.path.join(args.dataset_dir, f"index_{args.prefix}.html"),
             filenames=list(dataset_filenames_set)[:args.make_index],
             cloths_img_dir=cloths_img_dir,
             models_img_dir=models_img_dir,
