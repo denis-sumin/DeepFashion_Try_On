@@ -13,6 +13,8 @@ import numpy
 
 def run_openpose(source_images_dir: str, dst_dir: str):
     cwd = "/root/openpose"
+    env = {
+    }
     cmd = [
         "./build/examples/openpose/openpose.bin",
         "-image_dir", source_images_dir,
@@ -22,7 +24,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
         "-write_json", dst_dir,
         "-model_pose", "COCO"
     ]
-    subprocess.run(args=cmd, cwd=cwd)
+    subprocess.run(args=cmd, cwd=cwd, env=env)
 
 
 def run_segmentation(source_images_dir: str, dst_dir: str):
@@ -111,7 +113,12 @@ def process_one_pose_file(src_path: str, dst_path: str) -> None:
     with open(src_path, "r") as f:
         pose_data = json.load(f)
 
-    pose_data["people"][0]["pose_keypoints"] = pose_data["people"][0].pop("pose_keypoints_2d")
+    try:
+        pose_data["people"][0]["pose_keypoints"] = pose_data["people"][0].pop("pose_keypoints_2d")
+    except IndexError:
+        print(f"IndexError: pose_data['people'][0] element doesn't exist in {src_path}")
+    except KeyError as e:
+        print(f"KeyError: {e} in {src_path}")
 
     with open(dst_path, "w") as f:
         json.dump(pose_data, f)
