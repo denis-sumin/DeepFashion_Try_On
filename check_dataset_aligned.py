@@ -1,10 +1,10 @@
 import os
-import shutil
+# import shutil
 import sys
 
 dataset_root = sys.argv[1]
 dataset_prefix = sys.argv[2]
-dataset_masks_root = sys.argv[3]
+# dataset_masks_root = sys.argv[3]
 
 dataset_dirs = [
     "img",
