@@ -28,7 +28,7 @@ for filename in all_filenames:
         for dirname in dataset_dirs:
             if filename in filenames[dirname]:
                 os.remove(os.path.join(dataset_root, dataset_prefix + "_" + dirname, filename))
-        all_filenames.remove(filename)
+        # all_filenames.remove(filename)
 
 # src_colormask_dir = os.path.join(dataset_masks_root, dataset_prefix + "_colormask")
 # colormask_filenames = os.listdir(src_colormask_dir)
