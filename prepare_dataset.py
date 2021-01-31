@@ -18,6 +18,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
         "-image_dir", source_images_dir,
         "-write_images", dst_dir,
         "-display", "0",
+        "--cli_verbose", "0.01",
         "-write_json", dst_dir,
         "-model_pose", "COCO"
     ]
