@@ -125,7 +125,10 @@ def process_one_pose_file(src_path: str, dst_path: str) -> None:
 
 
 def process_one_file_star(func: Callable, arg: Tuple[str, str]) -> None:
-    return func(*arg)
+    try:
+        return func(*arg)
+    except Exception as e:
+        print(f"{type(e)}: {e}. {func}, arguments: {arg}")
 
 
 def process_many_files(function: Callable, src_dir: str, dst_dir: str,
