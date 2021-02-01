@@ -9,7 +9,7 @@ results_dirs = sys.argv[2:]
 results_list = os.listdir(os.path.join(input_path, "test_reference_crop"))
 one_image_width = 192
 
-with open(os.path.join(input_path, "results_index.html")) as f:
+with open(os.path.join(input_path, "results_index.html"), "w") as f:
     f.write(f"<table>" + "\n")
     # f.write(f"<tr>" + "\n")
     # f.write(f"<th>Cloth</th>" + "\n")
