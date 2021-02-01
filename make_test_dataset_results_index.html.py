@@ -3,8 +3,6 @@ import sys
 
 import imageio
 
-from vis_results_epochs import dirs
-
 input_path = sys.argv[1]
 results_dirs = sys.argv[2:]
 
@@ -13,13 +11,13 @@ one_image_width = 192
 
 with open(os.path.join(input_path, "results_index.html")) as f:
     f.write(f"<table>" + "\n")
-    f.write(f"<tr>" + "\n")
-    f.write(f"<th>Cloth</th>" + "\n")
-    for dir_ in dirs:
-        f.write(f"<th>{dir_}</th>" + "\n")
-    f.write(f"<th>GT / Source</th>" + "\n")
-    f.write(f"<th>Segm (their)</th>" + "\n")
-    f.write(f"</tr>" + "\n")
+    # f.write(f"<tr>" + "\n")
+    # f.write(f"<th>Cloth</th>" + "\n")
+    # for dir_ in dirs:
+    #     f.write(f"<th>{dir_}</th>" + "\n")
+    # f.write(f"<th>GT / Source</th>" + "\n")
+    # f.write(f"<th>Segm (their)</th>" + "\n")
+    # f.write(f"</tr>" + "\n")
     for filename in results_list:
         f.write(f"<tr>" + "\n")
         f.write(f"<td><img src='test_pose_src/{filename.replace('.jpg', '_0_rendered.png')}'></td>" + "\n")
