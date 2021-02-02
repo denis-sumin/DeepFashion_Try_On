@@ -54,7 +54,7 @@ for dirname in sorted(os.listdir(input_path)):
             reference_meta = json.load(f)
         top_product_id = dict(zip(reference_meta["product_categories"], reference_meta["product_ids"]))["tops"]
 
-        reference_cloth_photo_dir = os.path.join(photos_path, "tops", top_product_id + "_0", top_product_id)
+        reference_cloth_photo_dir = os.path.join(photos_path, "tops", top_product_id, top_product_id[:-2])
         reference_cloth_photo_filename = sorted(os.listdir(reference_cloth_photo_dir))[1]
         reference_cloth_photo = imageio.imread(os.path.join(
             reference_cloth_photo_dir, reference_cloth_photo_filename
