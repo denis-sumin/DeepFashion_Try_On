@@ -20,6 +20,8 @@ with open(os.path.join(input_path, "results_index.html"), "w") as f:
     # f.write(f"</tr>" + "\n")
     for filename in results_list:
         f.write(f"<tr>" + "\n")
+        f.write(f"<td><img src='test_photo_cloth/{filename}'></td>" + "\n")
+        f.write(f"<td><img src='test_color/{filename}'></td>" + "\n")
         f.write(f"<td><img src='test_pose_src/{filename.replace('.jpg', '_rendered.png')}'></td>" + "\n")
         for result in results_dirs:
             image = imageio.imread(os.path.join(input_path, result, filename))
@@ -36,7 +38,6 @@ with open(os.path.join(input_path, "results_index.html"), "w") as f:
             f.write(f"<td><img src='{result}/{filename}_cloth.jpg'></td>" + "\n")
             f.write(f"<td><img src='{result}/{filename}_gen.jpg'></td>" + "\n")
         f.write(f"<td><img src='test_reference_crop/{filename}'></td>" + "\n")
-        f.write(f"<td><img src='test_photo_cloth/{filename}'></td>" + "\n")
         f.write(f"<td><img src='test_photo_model/{filename}'></td>" + "\n")
         f.write(f"</tr>" + "\n")
     f.write(f"</table>" + "\n")
