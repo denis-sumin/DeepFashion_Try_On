@@ -50,7 +50,9 @@ for dirname in sorted(os.listdir(input_path)):
         reference_model_photo = imageio.imread(os.path.join(
             reference_model_photo_dir, reference_model_photo_filename
         ))
-        reference_model_photo = cv2.resize(reference_model_photo, dsize=None, fx=.5, fy=.5, interpolation=cv2.INTER_AREA)
+        h, w = reference_model_photo.shape[:2]
+        scale_factor = 512 / h
+        reference_model_photo = cv2.resize(reference_model_photo, dsize=None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_AREA)
         h, w = reference_model_photo.shape[:2]
         reference_model_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
 
@@ -77,7 +79,9 @@ for dirname in sorted(os.listdir(input_path)):
             reference_cloth_photo = imageio.imread(os.path.join(
                 reference_cloth_photo_dir, reference_cloth_photo_filename
             ))
-            reference_cloth_photo = cv2.resize(reference_cloth_photo, dsize=None, fx=.5, fy=.5, interpolation=cv2.INTER_AREA)
+            h, w = reference_cloth_photo.shape[:2]
+            scale_factor = 512 / h
+            reference_cloth_photo = cv2.resize(reference_cloth_photo, dsize=None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_AREA)
             h, w = reference_cloth_photo.shape[:2]
             reference_cloth_photo_crop = reference_cloth_photo[:256, (w - 192) // 2:-(w - 192) // 2]
         if reference_cloth_photo is not None:
