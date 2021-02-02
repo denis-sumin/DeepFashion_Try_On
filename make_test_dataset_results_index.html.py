@@ -36,5 +36,7 @@ with open(os.path.join(input_path, "results_index.html"), "w") as f:
             f.write(f"<td><img src='{result}/{filename}_cloth.jpg'></td>" + "\n")
             f.write(f"<td><img src='{result}/{filename}_gen.jpg'></td>" + "\n")
         f.write(f"<td><img src='test_reference_crop/{filename}'></td>" + "\n")
+        f.write(f"<td><img src='test_photo_cloth/{filename}'></td>" + "\n")
+        f.write(f"<td><img src='test_photo_model/{filename}'></td>" + "\n")
         f.write(f"</tr>" + "\n")
     f.write(f"</table>" + "\n")
