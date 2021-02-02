@@ -74,7 +74,7 @@ for dirname in sorted(os.listdir(input_path)):
             ))
             reference_cloth_photo = cv2.resize(reference_cloth_photo, dsize=None, fx=.5, fy=.5, interpolation=cv2.INTER_AREA)
             h, w = reference_cloth_photo.shape[:2]
-            reference_cloth_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
+            reference_cloth_photo_crop = reference_cloth_photo[:256, (w - 192) // 2:-(w - 192) // 2]
         imageio.imwrite(os.path.join(output_path, "test_photo_cloth", f"{test_idx}.jpg"), reference_cloth_photo_crop, quality=97)
 
         img = imageio.imread(os.path.join(input_path, dirname, test, "tops.jpg"))
