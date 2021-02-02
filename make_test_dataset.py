@@ -39,22 +39,28 @@ for dirname in sorted(os.listdir(input_path)):
     h, w = reference_model_img.shape[:2]
     reference_model_img_crop = reference_model_img[:256, (w-192) // 2:-(w-192) // 2]
 
-    reference_model_photo_dir = os.path.join(photos_path, "tops", model_id + "_0", model_id)
-    try:
-        reference_model_photo_filename = sorted(os.listdir(reference_model_photo_dir))[1]
-    except FileNotFoundError:
-        print(f"{reference_model_photo_dir} does not exist")
+    model_not_found = True
+    for category in os.listdir(photos_path):
+        reference_model_photo_dir = os.path.join(photos_path, category, model_id + "_0", model_id)
+        try:
+            reference_model_photo_filename = sorted(os.listdir(reference_model_photo_dir))[1]
+        except FileNotFoundError:
+            continue
+        else:
+            reference_model_photo = imageio.imread(os.path.join(
+                reference_model_photo_dir, reference_model_photo_filename
+            ))
+            h, w = reference_model_photo.shape[:2]
+            scale_factor = 512 / h
+            reference_model_photo = cv2.resize(reference_model_photo, dsize=None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_AREA)
+            h, w = reference_model_photo.shape[:2]
+            reference_model_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
+            model_not_found = False
+            break
+    if model_not_found:
+        print(f"Failed to find photo of model {model_id}")
         reference_model_photo = None
         reference_model_photo_crop = numpy.ones(shape=(256, 192, 3), dtype=numpy.uint8) * 200
-    else:
-        reference_model_photo = imageio.imread(os.path.join(
-            reference_model_photo_dir, reference_model_photo_filename
-        ))
-        h, w = reference_model_photo.shape[:2]
-        scale_factor = 512 / h
-        reference_model_photo = cv2.resize(reference_model_photo, dsize=None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_AREA)
-        h, w = reference_model_photo.shape[:2]
-        reference_model_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
 
     for test in tests:
         imageio.imwrite(os.path.join(output_path, "test_img_ref", f"{test_idx}.jpg"), reference_model_img, quality=97)
