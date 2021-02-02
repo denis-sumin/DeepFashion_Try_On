@@ -22,7 +22,8 @@ os.makedirs(os.path.join(output_path, "test_color"), exist_ok=True)
 os.makedirs(os.path.join(output_path, "test_img"), exist_ok=True)
 os.makedirs(os.path.join(output_path, "test_img_ref"), exist_ok=True)
 os.makedirs(os.path.join(output_path, "test_photo_model"), exist_ok=True)
-os.makedirs(os.path.join(output_path, "test_photo_cloth"), exist_ok=True)
+os.makedirs(os.path.join(output_path, "test_photo_model_src"), exist_ok=True)
+os.makedirs(os.path.join(output_path, "test_photo_cloth_src"), exist_ok=True)
 
 test_idx = 0
 for dirname in sorted(os.listdir(input_path)):
@@ -43,6 +44,7 @@ for dirname in sorted(os.listdir(input_path)):
         reference_model_photo_filename = sorted(os.listdir(reference_model_photo_dir))[1]
     except FileNotFoundError:
         print(f"{reference_model_photo_dir} does not exist")
+        reference_model_photo = None
         reference_model_photo_crop = numpy.ones(shape=(256, 192, 3), dtype=numpy.uint8) * 200
     else:
         reference_model_photo = imageio.imread(os.path.join(
@@ -56,6 +58,8 @@ for dirname in sorted(os.listdir(input_path)):
         imageio.imwrite(os.path.join(output_path, "test_img_ref", f"{test_idx}.jpg"), reference_model_img, quality=97)
         imageio.imwrite(os.path.join(output_path, "test_img", f"{test_idx}.jpg"), reference_model_img_crop, quality=97)
 
+        if reference_model_photo:
+            imageio.imwrite(os.path.join(output_path, "test_photo_model_src", f"{test_idx}.jpg"), reference_model_photo, quality=97)
         imageio.imwrite(os.path.join(output_path, "test_photo_model", f"{test_idx}.jpg"), reference_model_photo_crop, quality=97)
 
         with open(os.path.join(input_path, dirname, test, "meta.json"), "r") as f:
@@ -67,6 +71,7 @@ for dirname in sorted(os.listdir(input_path)):
             reference_cloth_photo_filename = sorted(os.listdir(reference_cloth_photo_dir))[1]
         except FileNotFoundError:
             print(f"{reference_model_photo_dir} does not exist")
+            reference_cloth_photo = None
             reference_cloth_photo_crop = numpy.ones(shape=(256, 192, 3), dtype=numpy.uint8) * 200
         else:
             reference_cloth_photo = imageio.imread(os.path.join(
@@ -75,6 +80,8 @@ for dirname in sorted(os.listdir(input_path)):
             reference_cloth_photo = cv2.resize(reference_cloth_photo, dsize=None, fx=.5, fy=.5, interpolation=cv2.INTER_AREA)
             h, w = reference_cloth_photo.shape[:2]
             reference_cloth_photo_crop = reference_cloth_photo[:256, (w - 192) // 2:-(w - 192) // 2]
+        if reference_cloth_photo:
+            imageio.imwrite(os.path.join(output_path, "test_photo_cloth_src", f"{test_idx}.jpg"), reference_cloth_photo, quality=97)
         imageio.imwrite(os.path.join(output_path, "test_photo_cloth", f"{test_idx}.jpg"), reference_cloth_photo_crop, quality=97)
 
         img = imageio.imread(os.path.join(input_path, dirname, test, "tops.jpg"))
