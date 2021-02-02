@@ -43,7 +43,7 @@ for dirname in sorted(os.listdir(input_path)):
         reference_model_photo_filename = sorted(os.listdir(reference_model_photo_dir))[1]
     except FileNotFoundError:
         print(f"{reference_model_photo_dir} does not exist")
-        reference_model_photo_crop = numpy.ones(shape=(256, 192, 3), dtyle=numpy.uint8) * 200
+        reference_model_photo_crop = numpy.ones(shape=(256, 192, 3), dtype=numpy.uint8) * 200
     else:
         reference_model_photo = imageio.imread(os.path.join(
             reference_model_photo_dir, reference_model_photo_filename
@@ -67,7 +67,7 @@ for dirname in sorted(os.listdir(input_path)):
             reference_cloth_photo_filename = sorted(os.listdir(reference_cloth_photo_dir))[1]
         except FileNotFoundError:
             print(f"{reference_model_photo_dir} does not exist")
-            reference_cloth_photo_crop = numpy.ones(shape=(256, 192, 3), dtyle=numpy.uint8) * 200
+            reference_cloth_photo_crop = numpy.ones(shape=(256, 192, 3), dtype=numpy.uint8) * 200
         else:
             reference_cloth_photo = imageio.imread(os.path.join(
                 reference_cloth_photo_dir, reference_cloth_photo_filename
