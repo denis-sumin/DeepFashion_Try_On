@@ -47,12 +47,14 @@ for dirname in sorted(os.listdir(input_path)):
     reference_model_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
 
     for test in tests:
+        imageio.imwrite(os.path.join(output_path, "test_img_ref", f"{test_idx}.jpg"), reference_model_img, quality=97)
+        imageio.imwrite(os.path.join(output_path, "test_img", f"{test_idx}.jpg"), reference_model_img_crop, quality=97)
 
         with open(os.path.join(input_path, dirname, reference, "meta.json"), "r") as f:
             reference_meta = json.load(f)
         top_product_id = dict(zip(reference_meta["product_categories"], reference_meta["product_ids"]))["tops"]
 
-        reference_cloth_photo_dir = os.path.join(photos_path, "tops", model_id + "_0", top_product_id)
+        reference_cloth_photo_dir = os.path.join(photos_path, "tops", top_product_id + "_0", top_product_id)
         reference_cloth_photo_filename = sorted(os.listdir(reference_cloth_photo_dir))[1]
         reference_cloth_photo = imageio.imread(os.path.join(
             reference_cloth_photo_dir, reference_cloth_photo_filename
@@ -61,9 +63,6 @@ for dirname in sorted(os.listdir(input_path)):
         h, w = reference_cloth_photo.shape[:2]
         reference_cloth_photo_crop = reference_model_photo[:256, (w - 192) // 2:-(w - 192) // 2]
         imageio.imwrite(os.path.join(output_path, "test_photo_cloth", f"{test_idx}.jpg"), reference_cloth_photo_crop, quality=97)
-
-        imageio.imwrite(os.path.join(output_path, "test_img_ref", f"{test_idx}.jpg"), reference_model_img, quality=97)
-        imageio.imwrite(os.path.join(output_path, "test_img", f"{test_idx}.jpg"), reference_model_img_crop, quality=97)
 
         imageio.imwrite(os.path.join(output_path, "test_photo_model", f"{test_idx}.jpg"), reference_model_photo_crop, quality=97)
 
