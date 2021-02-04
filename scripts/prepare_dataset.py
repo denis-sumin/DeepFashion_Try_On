@@ -2,6 +2,7 @@ import argparse
 import json
 import multiprocessing
 import os
+import random
 import subprocess
 from functools import partial
 from typing import Callable, Sequence, Set, Tuple
@@ -9,6 +10,31 @@ from typing import Callable, Sequence, Set, Tuple
 import cv2
 import imageio
 import numpy
+import PIL.Image
+
+
+def get_palette(num_cls):
+    """ Returns the color map for visualizing the segmentation mask.
+    Args:
+        num_cls: Number of classes
+    Returns:
+        The color map
+    """
+    n = num_cls
+    palette = [0] * (n * 3)
+    for j in range(0, n):
+        lab = j
+        palette[j * 3 + 0] = 0
+        palette[j * 3 + 1] = 0
+        palette[j * 3 + 2] = 0
+        i = 0
+        while lab:
+            palette[j * 3 + 0] |= (((lab >> 0) & 1) << (7 - i))
+            palette[j * 3 + 1] |= (((lab >> 1) & 1) << (7 - i))
+            palette[j * 3 + 2] |= (((lab >> 2) & 1) << (7 - i))
+            i += 1
+            lab >>= 3
+    return palette
 
 
 def run_openpose(source_images_dir: str, dst_dir: str):
@@ -122,6 +148,13 @@ def process_one_label_file(src_path: str, dst_path: str) -> None:
     imageio.imwrite(dst_path, image_new)
 
 
+def make_one_label_vis(src_path: str, dst_path: str) -> None:
+    image = PIL.Image.open(src_path)
+    palette = get_palette(128)
+    image.putpalette(palette)
+    image.save(dst_path)
+
+
 def process_one_pose_file(src_path: str, dst_path: str) -> None:
     with open(src_path, "r") as f:
         pose_data = json.load(f)
@@ -169,6 +202,10 @@ def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
 
 def process_label_files(src_dir: str, dst_dir: str) -> None:
     process_many_files(process_one_label_file, src_dir, dst_dir, (".png",), ".png")
+
+
+def make_labels_vis(src_dir: str, dst_dir: str) -> None:
+    process_many_files(make_one_label_vis, src_dir, dst_dir, (".png",), ".png")
 
 
 def process_pose_files(src_dir: str, dst_dir: str) -> None:
@@ -220,11 +257,11 @@ def make_index(
     pose, pose_suffix = pose
     labels, labels_suffix = labels
 
-    cloths = cloths.replace(output_file_parent_path, "./")
-    edges = edges.replace(output_file_parent_path, "./")
-    models = models.replace(output_file_parent_path, "./")
-    pose = pose.replace(output_file_parent_path, "./")
-    labels = labels.replace(output_file_parent_path, "./")
+    cloths = cloths.replace(output_file_parent_path, ".")
+    edges = edges.replace(output_file_parent_path, ".")
+    models = models.replace(output_file_parent_path, ".")
+    pose = pose.replace(output_file_parent_path, ".")
+    labels = labels.replace(output_file_parent_path, ".")
 
     with open(output_file_path, "w") as f:
         f.write("<table>" + "\n")
@@ -269,6 +306,10 @@ def main():
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
     process_label_files(labels_src_dir, labels_dst_dir)
 
+    print("Creating label visualizations...")
+    labels_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_vis"))
+    make_labels_vis(labels_dst_dir, labels_vis_dir)
+
     print("Generating cloths masks...")
     edges_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge"))
     prepare_cloth_masks(cloths_img_dir, edges_dst_dir)
@@ -284,11 +325,15 @@ def main():
     dataset_filenames_set = check_dataset_aligned(list(dirs_suffix.values()))
 
     dirs_suffix["pose"] = (openpose_src_dir, "_rendered.png")
+    dirs_suffix["labels"] = (labels_vis_dir, ".png")
 
     if args.make_index > 0:
+        random.seed(0)
+        filenames_list = list(dataset_filenames_set)
+        random.shuffle(filenames_list)
         make_index(
-            output_file_path=os.path.join(args.dataset_dir, f"index_{args.prefix}.html"),
-            filenames=list(dataset_filenames_set)[: args.make_index],
+            output_file_path=os.path.abspath(os.path.join(args.dataset_dir, f"index_{args.prefix}.html")),
+            filenames=filenames_list[: args.make_index],
             **dirs_suffix,
         )
 
