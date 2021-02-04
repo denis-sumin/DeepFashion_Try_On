@@ -138,9 +138,19 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         mask_fore=torch.FloatTensor((data['label'].cpu().numpy()>0).astype(np.int))
         img_fore=data['image']*mask_fore
         img_fore_wc=img_fore*mask_fore
-        all_clothes_label=changearm(data['label'])
+        all_clothes_label=changearm(data['label'])  # attach arms- and noise- labels to the upper cloth (segment. mask)
         ############## Forward Pass ######################
-        losses, fake_image, real_image,input_label,L1_loss,style_loss,clothes_mask,warped,refined,CE_loss,rx,ry,cx,cy,rg,cg= model(Variable(data['label'].cuda()),Variable(data['edge'].cuda()),Variable(img_fore.cuda()),Variable(mask_clothes.cuda()),Variable(data['color'].cuda()),Variable(all_clothes_label.cuda()),Variable(data['image'].cuda()),Variable(data['pose'].cuda()),Variable(data['mask'].cuda())  )
+        losses, fake_image, real_image,input_label,L1_loss,style_loss,clothes_mask,warped,refined,CE_loss,rx,ry,cx,cy,rg,cg= model(
+            Variable(data['label'].cuda()),  # label  <->  segmentation
+            Variable(data['edge'].cuda()),  # pre_clothes_mask  <-> mask for the cloth image
+            Variable(img_fore.cuda()),  # img_fore  <->  target person image without background
+            Variable(mask_clothes.cuda()),  # clothes_mask  <-> mask of current person clothes
+            Variable(data['color'].cuda()),  # clothes (to put on the target person)
+            Variable(all_clothes_label.cuda()),  # all_clothes_label
+            Variable(data['image'].cuda()),  # real_image
+            Variable(data['pose'].cuda()),  # pose
+            Variable(data['mask'].cuda())  # mask
+        )
 
         # sum per device losses
         losses = [ torch.mean(x) if not isinstance(x, int) else x for x in losses ]
