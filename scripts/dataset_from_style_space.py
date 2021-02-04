@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 import random
@@ -11,7 +10,6 @@ import imageio
 import numpy
 import requests
 
-
 try_on_image_template = "https://media.tryoncloth.com/generated_model_image/{model_file}.png"
 
 
@@ -22,12 +20,16 @@ STYLE_SPACE_APP_HEADERS = {
 
 def style_space_login():
     headers = copy(STYLE_SPACE_APP_HEADERS)
-    r = requests.post("https://app.tryoncloth.com/sign_in", headers=headers, json={
-        "credential": "anuf10h",
-        "credential_type": "password",
-        "identifier": "stylespace@dsumin.ru",
-        "identifier_type": "email"
-    })
+    r = requests.post(
+        "https://app.tryoncloth.com/sign_in",
+        headers=headers,
+        json={
+            "credential": "anuf10h",
+            "credential_type": "password",
+            "identifier": "stylespace@dsumin.ru",
+            "identifier_type": "email",
+        },
+    )
     if r.status_code == 200:
         # Returned sample:
         # {
@@ -38,8 +40,8 @@ def style_space_login():
         #         "has_profile_photo": true,
         #         "has_selected_sites": false
         #     },
-        #     "refresh_token": "pbkdf2:sha256:2044$5knuIvqW$35d5a7a8d8d68e920be87d01f2405708c5ad379e1fabc6b755c5b5651bddefeb",
-        #     "session_token": "pbkdf2:sha256:2044$FioPnsGQ$89146248c4d8df18ddd3d1ce4e722a6a4f63caaf9eab4661c90c52f6d4829607",
+        #     "refresh_token": "pbkdf2:sha256:2044$5knuIvqW$35d5a7a8d8d68e920be87d01f2405708c5ad379e1fabc6b755c5...",
+        #     "session_token": "pbkdf2:sha256:2044$FioPnsGQ$89146248c4d8df18ddd3d1ce4e722a6a4f63caaf9eab4661c90c...",
         #     "success": true,
         #     "user_id": "KgXKWJfl3beae18118a14b8b29ccac1429846233b07a0f80c47443e3d80a9b14b5e2c0be"
         # }
@@ -70,10 +72,12 @@ def make_auth_headers():
     session = make_session(login_data["user_id"], login_data["refresh_token"])
 
     auth_headers = copy(STYLE_SPACE_APP_HEADERS)
-    auth_headers.update({
-        "session_token": session["session_token"],
-        "user_id": login_data["user_id"],
-    })
+    auth_headers.update(
+        {
+            "session_token": session["session_token"],
+            "user_id": login_data["user_id"],
+        }
+    )
     return auth_headers
 
 
@@ -100,7 +104,7 @@ def main(scrape_gender, random_seed):
 
     auth_headers = make_auth_headers()
 
-    products_collection_file = "style_space_products.json"
+    products_collection_file = "../style_space_products.json"
     if os.path.exists(products_collection_file):
         with open(products_collection_file, "r") as f:
             products_collection = json.load(f)
@@ -128,14 +132,19 @@ def main(scrape_gender, random_seed):
                 products_collection[gender][category] = []
                 page = 0
                 while True:
-                    search_products_args.update({
-                        "gender": gender,
-                        "tryon_categories[]": category,
-                        "page": page,
-                    })
+                    search_products_args.update(
+                        {
+                            "gender": gender,
+                            "tryon_categories[]": category,
+                            "page": page,
+                        }
+                    )
                     print(gender, category, page)
                     search_products_args_query_string = "&".join([f"{k}={v}" for k, v in search_products_args.items()])
-                    r = requests.get("https://app.tryoncloth.com/search_product?" + search_products_args_query_string, headers=STYLE_SPACE_APP_HEADERS)
+                    r = requests.get(
+                        "https://app.tryoncloth.com/search_product?" + search_products_args_query_string,
+                        headers=STYLE_SPACE_APP_HEADERS,
+                    )
                     if r.status_code == 200:
                         products = r.json()["products"]
                         if products:
@@ -146,7 +155,7 @@ def main(scrape_gender, random_seed):
                     else:
                         print(r.status_code, r.json())
 
-        with open("style_space_products.json", "w") as f:
+        with open("../style_space_products.json", "w") as f:
             json.dump(products_collection, f)
 
     for gender in ("male", "female"):
@@ -155,7 +164,7 @@ def main(scrape_gender, random_seed):
 
     return
 
-    models_collection_file = "style_space_models.json"
+    models_collection_file = "../style_space_models.json"
     if os.path.exists(models_collection_file):
         with open(models_collection_file, "r") as f:
             models_collection = json.load(f)
@@ -176,8 +185,12 @@ def main(scrape_gender, random_seed):
                     ("categories[]", "tops"),
                 ]
                 print(recommended_model_list_args_list)
-                recommended_model_list_args_query_string = "&".join([f"{k}={v}" for k, v in recommended_model_list_args_list])
-                r = requests.get("https://app.tryoncloth.com/get_recommended_model_list?" + recommended_model_list_args_query_string)
+                recommended_model_list_args_query_string = "&".join(
+                    [f"{k}={v}" for k, v in recommended_model_list_args_list]
+                )
+                r = requests.get(
+                    "https://app.tryoncloth.com/get_recommended_model_list?" + recommended_model_list_args_query_string
+                )
                 if r.status_code == 200:
                     model_ids = r.json()["model_ids"]
                     if model_ids:
@@ -195,7 +208,7 @@ def main(scrape_gender, random_seed):
     for gender in ("male", "female"):
         print(gender, len(models_collection[gender]))
 
-    images_dir = "style_space_images"
+    images_dir = "../style_space_images"
     os.makedirs(images_dir, exist_ok=True)
 
     gender = scrape_gender
@@ -218,17 +231,18 @@ def main(scrape_gender, random_seed):
             bottom_cloth_id = g_bottoms[bottom_idx]
             top_cloth_id = g_tops[top_idx]
 
-            r = requests.post("https://app.tryoncloth.com/create_tryon_for_products", headers=auth_headers, json={
-                "categories": [
-                    "tops",
-                    "bottoms"
-                ],
-                "model_id": model_id,
-                "product_ids": [
-                    top_cloth_id,
-                    bottom_cloth_id,
-                ]
-            })
+            r = requests.post(
+                "https://app.tryoncloth.com/create_tryon_for_products",
+                headers=auth_headers,
+                json={
+                    "categories": ["tops", "bottoms"],
+                    "model_id": model_id,
+                    "product_ids": [
+                        top_cloth_id,
+                        bottom_cloth_id,
+                    ],
+                },
+            )
             if r.status_code == 200:
                 # pprint(r.json())
                 process_one_model(r.json()["look_metadata"], images_dir)

@@ -4,7 +4,7 @@ import multiprocessing
 import os
 import subprocess
 from functools import partial
-from typing import Callable, Sequence, Tuple, Set
+from typing import Callable, Sequence, Set, Tuple
 
 import cv2
 import imageio
@@ -18,12 +18,18 @@ def run_openpose(source_images_dir: str, dst_dir: str):
     }
     cmd = [
         "./build/examples/openpose/openpose.bin",
-        "-image_dir", source_images_dir,
-        "-write_images", dst_dir,
-        "-display", "0",
-        "--cli_verbose", "0.01",
-        "-write_json", dst_dir,
-        "-model_pose", "COCO"
+        "-image_dir",
+        source_images_dir,
+        "-write_images",
+        dst_dir,
+        "-display",
+        "0",
+        "--cli_verbose",
+        "0.01",
+        "-write_json",
+        dst_dir,
+        "-model_pose",
+        "COCO",
     ]
     subprocess.run(args=cmd, cwd=cwd, env=env)
 
@@ -33,14 +39,19 @@ def run_segmentation(source_images_dir: str, dst_dir: str):
     env = {
         "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES"),
         "PATH": "/usr/local/bin:/usr/bin",
-        "LD_LIBRARY_PATH": "/usr/local/cuda-10.0/lib64"
+        "LD_LIBRARY_PATH": "/usr/local/cuda-10.0/lib64",
     }
     cmd = [
-        "./venv/bin/python", "simple_extractor.py",
-        "--dataset", "lip",
-        "--model-restore", "checkpoints/lip.pth",
-        "--input-dir", source_images_dir,
-        "--output-dir", dst_dir,
+        "./venv/bin/python",
+        "simple_extractor.py",
+        "--dataset",
+        "lip",
+        "--model-restore",
+        "checkpoints/lip.pth",
+        "--input-dir",
+        source_images_dir,
+        "--output-dir",
+        dst_dir,
     ]
     subprocess.run(args=cmd, cwd=cwd, env=env)
 
@@ -133,13 +144,13 @@ def process_one_file_star(func: Callable, arg: Tuple[str, str]) -> None:
         print(f"{type(e)}: {e}. {func}, arguments: {arg}")
 
 
-def process_many_files(function: Callable, src_dir: str, dst_dir: str,
-                       src_extensions: Sequence[str], dst_extension: str) -> None:
+def process_many_files(
+    function: Callable, src_dir: str, dst_dir: str, src_extensions: Sequence[str], dst_extension: str
+) -> None:
     os.makedirs(dst_dir, exist_ok=True)
 
     filenames = [
-        (os.path.join(src_dir, filename),
-         os.path.join(dst_dir, os.path.splitext(filename)[0] + dst_extension))
+        (os.path.join(src_dir, filename), os.path.join(dst_dir, os.path.splitext(filename)[0] + dst_extension))
         for filename in sorted(os.listdir(src_dir))
         if os.path.splitext(filename)[-1] in src_extensions
     ]
@@ -147,9 +158,7 @@ def process_many_files(function: Callable, src_dir: str, dst_dir: str,
     items_count = len(filenames)
     print_every = max(1, int(0.01 * items_count))
     with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
-        for idx, _ in enumerate(pool.imap_unordered(
-                partial(process_one_file_star, function), filenames
-        )):
+        for idx, _ in enumerate(pool.imap_unordered(partial(process_one_file_star, function), filenames)):
             if not idx % print_every:
                 print(f"{idx} / {items_count}", end="\r")
 
@@ -178,7 +187,7 @@ def check_dataset_aligned(dirs: Sequence[Tuple[str, str]]) -> Set[str]:
     filenames_removed = set()
     for filename in all_filenames:
         remove_filename = False
-        for dir_path, suffix in dirs:
+        for dir_path, _suffix in dirs:
             if filename not in filenames[dir_path]:
                 remove_filename = True
                 break
@@ -193,10 +202,15 @@ def check_dataset_aligned(dirs: Sequence[Tuple[str, str]]) -> Set[str]:
     return all_filenames.difference(filenames_removed)
 
 
-def make_index(output_file_path: str, filenames: Sequence[str],
-               cloths: Tuple[str, str], models: Tuple[str, str],
-               pose: Tuple[str, str], labels: Tuple[str, str],
-               edges: Tuple[str, str],) -> None:
+def make_index(
+    output_file_path: str,
+    filenames: Sequence[str],
+    cloths: Tuple[str, str],
+    models: Tuple[str, str],
+    pose: Tuple[str, str],
+    labels: Tuple[str, str],
+    edges: Tuple[str, str],
+) -> None:
 
     output_file_parent_path = os.path.split(output_file_path)[0]
 
@@ -213,16 +227,16 @@ def make_index(output_file_path: str, filenames: Sequence[str],
     labels = labels.replace(output_file_parent_path, "./")
 
     with open(output_file_path, "w") as f:
-        f.write(f"<table>" + "\n")
+        f.write("<table>" + "\n")
         for filename in filenames:
-            f.write(f"<tr>" + "\n")
+            f.write("<tr>" + "\n")
             f.write(f"<td><img src='{os.path.join(cloths, filename + cloths_img_suffix)}'></td>" + "\n")
             f.write(f"<td><img src='{os.path.join(edges, filename + edges_suffix)}'></td>" + "\n")
             f.write(f"<td><img src='{os.path.join(models, filename + models_suffix)}'></td>" + "\n")
             f.write(f"<td><img src='{os.path.join(pose, filename + pose_suffix)}'></td>" + "\n")
             f.write(f"<td><img src='{os.path.join(labels, filename + labels_suffix)}'></td>" + "\n")
-            f.write(f"</tr>" + "\n")
-        f.write(f"</table>" + "\n")
+            f.write("</tr>" + "\n")
+        f.write("</table>" + "\n")
 
 
 def get_args():
@@ -274,8 +288,8 @@ def main():
     if args.make_index > 0:
         make_index(
             output_file_path=os.path.join(args.dataset_dir, f"index_{args.prefix}.html"),
-            filenames=list(dataset_filenames_set)[:args.make_index],
-            **dirs_suffix
+            filenames=list(dataset_filenames_set)[: args.make_index],
+            **dirs_suffix,
         )
 
 

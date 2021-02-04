@@ -1,14 +1,14 @@
 # encoding: utf-8
 
-import math
-import torch
 import itertools
+
 import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from grid_sample import grid_sample
-from torch.autograd import Variable
 from tps_grid_gen import TPSGridGen
+
 
 class CNN(nn.Module):
     def __init__(self, num_output):
@@ -28,8 +28,8 @@ class CNN(nn.Module):
         x = self.fc2(x)
         return x
 
-class ClsNet(nn.Module):
 
+class ClsNet(nn.Module):
     def __init__(self):
         super(ClsNet, self).__init__()
         self.cnn = CNN(10)
@@ -37,8 +37,8 @@ class ClsNet(nn.Module):
     def forward(self, x):
         return F.log_softmax(self.cnn(x))
 
-class BoundedGridLocNet(nn.Module):
 
+class BoundedGridLocNet(nn.Module):
     def __init__(self, grid_height, grid_width, target_control_points):
         super(BoundedGridLocNet, self).__init__()
         self.cnn = CNN(grid_height * grid_width * 2)
@@ -53,8 +53,8 @@ class BoundedGridLocNet(nn.Module):
         points = F.tanh(self.cnn(x))
         return points.view(batch_size, -1, 2)
 
-class UnBoundedGridLocNet(nn.Module):
 
+class UnBoundedGridLocNet(nn.Module):
     def __init__(self, grid_height, grid_width, target_control_points):
         super(UnBoundedGridLocNet, self).__init__()
         self.cnn = CNN(grid_height * grid_width * 2)
@@ -68,25 +68,29 @@ class UnBoundedGridLocNet(nn.Module):
         points = self.cnn(x)
         return points.view(batch_size, -1, 2)
 
-class STNClsNet(nn.Module):
 
+class STNClsNet(nn.Module):
     def __init__(self, args):
         super(STNClsNet, self).__init__()
         self.args = args
 
         r1 = args.span_range_height
         r2 = args.span_range_width
-        assert r1 < 1 and r2 < 1 # if >= 1, arctanh will cause error in BoundedGridLocNet
-        target_control_points = torch.Tensor(list(itertools.product(
-            np.arange(-r1, r1 + 0.00001, 2.0  * r1 / (args.grid_height - 1)),
-            np.arange(-r2, r2 + 0.00001, 2.0  * r2 / (args.grid_width - 1)),
-        )))
-        Y, X = target_control_points.split(1, dim = 1)
-        target_control_points = torch.cat([X, Y], dim = 1)
+        assert r1 < 1 and r2 < 1  # if >= 1, arctanh will cause error in BoundedGridLocNet
+        target_control_points = torch.Tensor(
+            list(
+                itertools.product(
+                    np.arange(-r1, r1 + 0.00001, 2.0 * r1 / (args.grid_height - 1)),
+                    np.arange(-r2, r2 + 0.00001, 2.0 * r2 / (args.grid_width - 1)),
+                )
+            )
+        )
+        Y, X = target_control_points.split(1, dim=1)
+        target_control_points = torch.cat([X, Y], dim=1)
 
         GridLocNet = {
-            'unbounded_stn': UnBoundedGridLocNet,
-            'bounded_stn': BoundedGridLocNet,
+            "unbounded_stn": UnBoundedGridLocNet,
+            "bounded_stn": BoundedGridLocNet,
         }[args.model]
         self.loc_net = GridLocNet(args.grid_height, args.grid_width, target_control_points)
 
@@ -103,11 +107,12 @@ class STNClsNet(nn.Module):
         logit = self.cls_net(transformed_x)
         return logit
 
+
 def get_model(args):
-    if args.model == 'no_stn':
-        print('create model without STN')
+    if args.model == "no_stn":
+        print("create model without STN")
         model = ClsNet()
     else:
-        print('create model with STN')
+        print("create model with STN")
         model = STNClsNet(args)
     return model

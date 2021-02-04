@@ -1,8 +1,7 @@
 import json
 import os
-import multiprocessing
 from pprint import pprint
-from time import time, sleep
+from time import sleep, time
 
 import requests
 
@@ -10,7 +9,7 @@ STYLE_SPACE_APP_HEADERS = {
     "User-Agent": "FashionCamera/1.08 (com.tryoncloth.stylespace; build:0; iOS 12.5.1) Alamofire/5.2.2",
 }
 
-PRODUCTS_FILE = "style_space_all_products.json"
+PRODUCTS_FILE = "../style_space_all_products.json"
 PRODUCTS_DIR = "style_space_all_products"
 
 
@@ -65,21 +64,27 @@ def main():
         start_ts = time()
         page = 0
         while True:
-            search_products_args.update({
-                "page": page,
-            })
+            search_products_args.update(
+                {
+                    "page": page,
+                }
+            )
             search_products_args_query_string = "&".join([f"{k}={v}" for k, v in search_products_args.items()])
-            print(page, len(products_collection), (time() - start_ts) / (len(products_collection) if products_collection else 1))
+            print(
+                page,
+                len(products_collection),
+                (time() - start_ts) / (len(products_collection) if products_collection else 1),
+            )
 
-            r = requests.get("https://app.tryoncloth.com/search_product?" + search_products_args_query_string, headers=STYLE_SPACE_APP_HEADERS)
+            r = requests.get(
+                "https://app.tryoncloth.com/search_product?" + search_products_args_query_string,
+                headers=STYLE_SPACE_APP_HEADERS,
+            )
             if r.status_code == 200:
                 products_list = r.json()["products"]
                 if products_list:
-                    variations_count_before = len(products_collection)
-                    products_collection.update({
-                        p["variation_id"]: p
-                        for p in products_list
-                    })
+                    # variations_count_before = len(products_collection)
+                    products_collection.update({p["variation_id"]: p for p in products_list})
                     page += 1
                 else:
                     break
@@ -87,7 +92,7 @@ def main():
                 print(r.status_code, r.content)
                 try:
                     pprint(r.json())
-                except:
+                except Exception:
                     pass
 
         with open(PRODUCTS_FILE, "w") as f:
@@ -112,14 +117,11 @@ def main():
     #             if not idx % 1000:
     #                 print(f"{idx} / {products_count}")
 
-    products_categories = {
-        value["tryon"]["category"] for value in products_collection.values()
-    }
+    products_categories = {value["tryon"]["category"] for value in products_collection.values()}
     items_to_show = 1000
     for category in products_categories:
         collection = {
-            key: value for key, value in products_collection.items()
-            if value["tryon"]["category"] == category
+            key: value for key, value in products_collection.items() if value["tryon"]["category"] == category
         }
         cnt = 0
         with open(os.path.join(PRODUCTS_DIR, str(category), "index.html"), "w") as f:
@@ -132,9 +134,11 @@ def main():
                     for image_id in variation["display_images_order"]:
                         image_url = variation["display_images"][image_id]
                         image_path = os.path.join(dst_dir, f"{image_id}_{os.path.split(image_url)[-1]}")
-                        f.write(f"<td>{image_id}"
-                                f"<img src='../../{image_path}' style='max-width: 200px; max-height: 200px'/>"
-                                f"</td>")
+                        f.write(
+                            f"<td>{image_id}"
+                            f"<img src='../../{image_path}' style='max-width: 200px; max-height: 200px'/>"
+                            f"</td>"
+                        )
                     f.write("</tr>")
                 cnt += 1
                 if cnt > items_to_show:

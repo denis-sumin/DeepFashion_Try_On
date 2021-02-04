@@ -47,8 +47,9 @@ def process_one_item(item):
     if len(item_media["display_images_order"]) > 2:
         person_image_2_id = item_media["display_images_order"][2]
         person_image_2_url = item_media["display_images"][person_image_2_id]
-        person_image_2_path = os.path.join(src_dataset_dir,
-                                           f"{person_image_2_id}_{os.path.split(person_image_2_url)[-1]}")
+        person_image_2_path = os.path.join(
+            src_dataset_dir, f"{person_image_2_id}_{os.path.split(person_image_2_url)[-1]}"
+        )
         try:
             person_image_2 = imageio.imread(person_image_2_path)
         except (OSError, ValueError):
@@ -80,11 +81,9 @@ category = "tops"
 gender = "female"
 
 products_tops = {
-    key: value for key, value in all_products.items()
-    if (
-            value["tryon"]["category"] == category and
-            value["gender"] == gender
-    )
+    key: value
+    for key, value in all_products.items()
+    if (value["tryon"]["category"] == category and value["gender"] == gender)
 }
 
 model_photo_dir = os.path.join(dataset_target_root, "train_img")
@@ -93,10 +92,7 @@ os.makedirs(model_photo_dir, exist_ok=True)
 os.makedirs(cloth_photo_dir, exist_ok=True)
 
 dataset_target_items = min(dataset_target_items, len(products_tops))
-products_tops = {
-    key: item for idx, (key, item) in enumerate(products_tops.items())
-    if idx < dataset_target_items
-}
+products_tops = {key: item for idx, (key, item) in enumerate(products_tops.items()) if idx < dataset_target_items}
 
 with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
     results = pool.imap_unordered(process_one_item, products_tops.items())

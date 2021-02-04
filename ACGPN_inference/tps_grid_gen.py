@@ -1,9 +1,11 @@
 # encoding: utf-8
 
-import torch
 import itertools
+
+import torch
 import torch.nn as nn
-from torch.autograd import Function, Variable
+from torch.autograd import Variable
+
 
 # phi(x1, x2) = r^2 * log(r), where r = ||x1 - x2||_2
 def compute_partial_repr(input_points, control_points):
@@ -20,8 +22,8 @@ def compute_partial_repr(input_points, control_points):
     repr_matrix.masked_fill_(mask, 0)
     return repr_matrix
 
-class TPSGridGen(nn.Module):
 
+class TPSGridGen(nn.Module):
     def __init__(self, target_height, target_width, target_control_points):
         super(TPSGridGen, self).__init__()
         assert target_control_points.ndimension() == 2
@@ -45,20 +47,20 @@ class TPSGridGen(nn.Module):
         HW = target_height * target_width
         target_coordinate = list(itertools.product(range(target_height), range(target_width)))
         # print(target_coordinate)
-        target_coordinate = torch.Tensor(target_coordinate) # HW x 2
-        Y, X = target_coordinate.split(1, dim = 1)
+        target_coordinate = torch.Tensor(target_coordinate)  # HW x 2
+        Y, X = target_coordinate.split(1, dim=1)
         Y = Y * 2 / (target_height - 1) - 1
         X = X * 2 / (target_width - 1) - 1
-        target_coordinate = torch.cat([X, Y], dim = 1) # convert from (y, x) to (x, y)
+        target_coordinate = torch.cat([X, Y], dim=1)  # convert from (y, x) to (x, y)
         target_coordinate_partial_repr = compute_partial_repr(target_coordinate, target_control_points)
-        target_coordinate_repr = torch.cat([
-            target_coordinate_partial_repr, torch.ones(HW, 1), target_coordinate
-        ], dim = 1)
+        target_coordinate_repr = torch.cat(
+            [target_coordinate_partial_repr, torch.ones(HW, 1), target_coordinate], dim=1
+        )
 
         # register precomputed matrices
-        self.register_buffer('inverse_kernel', inverse_kernel)
-        self.register_buffer('padding_matrix', torch.zeros(3, 2))
-        self.register_buffer('target_coordinate_repr', target_coordinate_repr)
+        self.register_buffer("inverse_kernel", inverse_kernel)
+        self.register_buffer("padding_matrix", torch.zeros(3, 2))
+        self.register_buffer("target_coordinate_repr", target_coordinate_repr)
 
     def forward(self, source_control_points):
         assert source_control_points.ndimension() == 3

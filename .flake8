@@ -1,0 +1,20 @@
+[flake8]
+max-line-length=120
+exclude=
+    .env
+    .git
+    doc
+    research
+    data
+    vendor
+    **/migrations/*
+    **/boundaries/*
+    **/buildings/*
+    **/graph/*
+    **/routes/*
+application-package-names=cei_samara
+extend-ignore = E203
+per-file-ignores=
+    manage.py:D
+    **/*:D
+    **/__init__.py:D,F401,F403
