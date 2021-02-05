@@ -323,7 +323,7 @@ def main():
         "models": (models_img_dir, ".jpg"),
         "pose": (pose_dst_dir, "_keypoints.json"),
         "labels": (labels_dst_dir, ".png"),
-        "edges": (edges_dst_dir, ".jpg"),
+        "edges": (edges_dst_dir, ".png"),
     }
 
     dataset_filenames_set = check_dataset_aligned(list(dirs_suffix.values()))
