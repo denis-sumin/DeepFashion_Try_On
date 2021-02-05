@@ -197,7 +197,7 @@ def process_many_files(
 
 
 def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
-    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".jpg")
+    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".png")
 
 
 def process_label_files(src_dir: str, dst_dir: str) -> None:
@@ -281,6 +281,8 @@ def get_args():
     parser.add_argument("-d", "--dataset-dir", dest="dataset_dir", type=str, required=True)
     parser.add_argument("-p", "--prefix", dest="prefix", type=str, choices=["train", "test"], required=True)
     parser.add_argument("--make-index", dest="make_index", type=int, default=0)
+    parser.add_argument("--skip-openpose", dest="skip_openpose", action="store_true")
+    parser.add_argument("--skip-segmentation", dest="skip_segmentation", action="store_true")
     return parser.parse_args()
 
 
@@ -292,7 +294,8 @@ def main():
 
     print("Running openpose...")
     openpose_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose_src"))
-    run_openpose(models_img_dir, openpose_src_dir)
+    if not args.skip_openpose:
+        run_openpose(models_img_dir, openpose_src_dir)
 
     print("Processing pose files...")
     pose_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose"))
@@ -300,7 +303,8 @@ def main():
 
     print("Running human segmentation...")
     labels_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src"))
-    run_segmentation(models_img_dir, labels_src_dir)
+    if not args.skip_segmentation:
+        run_segmentation(models_img_dir, labels_src_dir)
 
     print("Processing label files...")
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
