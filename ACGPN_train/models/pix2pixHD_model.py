@@ -303,15 +303,15 @@ class Pix2PixHDModel(BaseModel):
 
     def forward(
         self,
-        label,
-        pre_clothes_mask,
-        img_fore,
-        clothes_mask,
-        clothes,
-        all_clothes_label,
-        real_image,
-        pose,
-        mask,
+        label,  # GT segmentation
+        pre_clothes_mask,  # mask for the cloth image
+        img_fore,  # target person image without background
+        clothes_mask,  # mask of current person clothes
+        clothes,  # clothes (to put on the target person)
+        all_clothes_label,  # labels with arms and noise attached to the upper wear
+        real_image,  # GT person photo
+        pose,  # pose data
+        mask,  # random mask from train_mask
     ):
         # Encode Inputs
         # ipdb.set_trace()
