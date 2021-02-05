@@ -292,18 +292,18 @@ def main():
     cloths_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_color"))
     models_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
 
-    print("Running openpose...")
     openpose_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose_src"))
     if not args.skip_openpose:
+        print("Running openpose...")
         run_openpose(models_img_dir, openpose_src_dir)
 
     print("Processing pose files...")
     pose_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose"))
     process_pose_files(openpose_src_dir, pose_dst_dir)
 
-    print("Running human segmentation...")
     labels_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src"))
     if not args.skip_segmentation:
+        print("Running human segmentation...")
         run_segmentation(models_img_dir, labels_src_dir)
 
     print("Processing label files...")
