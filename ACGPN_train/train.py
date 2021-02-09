@@ -228,7 +228,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ### display output images
         if step % 100 == 0:
             a = generate_label_color(generate_label_plain(input_label)).float().cuda()
-            b = generate_label_color(generate_label_plain(data["label"])).float().cuda()
+            b = generate_label_color(data["label"]).float().cuda()
             c = data["image"].float().cuda()
             # b = real_image.float().cuda()
             # c = fake_image.float().cuda()
