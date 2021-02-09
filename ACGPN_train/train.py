@@ -156,21 +156,21 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ############## Forward Pass ######################
         (
             losses,
-            fake_image,
-            real_image,
+            # fake_image,
+            # real_image,
             input_label,
-            L1_loss,
-            style_loss,
-            clothes_mask,
-            warped,
-            refined,
+            # L1_loss,
+            # style_loss,
+            # clothes_mask,
+            # warped,
+            # refined,
             CE_loss,
-            rx,
-            ry,
-            cx,
-            cy,
-            rg,
-            cg,
+            # rx,
+            # ry,
+            # cx,
+            # cy,
+            # rg,
+            # cg,
         ) = model(
             Variable(data["label"].cuda()),  # label  <->  segmentation
             Variable(data["edge"].cuda()),  # pre_clothes_mask  <-> mask for the cloth image
@@ -193,17 +193,20 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             loss_dict["G_GAN"]
             + loss_dict.get("G_GAN_Feat", 0)
             + loss_dict.get("G_VGG", 0)
-            + torch.mean(L1_loss + CE_loss + rx + ry + cx + cy + rg + cg)
+            + torch.mean(#L1_loss +
+                CE_loss
+                #+ rx + ry + cx + cy + rg + cg
+            )
         )
 
         writer.add_scalar("loss_d", loss_D, step)
         writer.add_scalar("loss_g", loss_G, step)
-        writer.add_scalar("loss_L1", torch.mean(L1_loss), step)
+        # writer.add_scalar("loss_L1", torch.mean(L1_loss), step)
         writer.add_scalar("CE_loss", torch.mean(CE_loss), step)
-        writer.add_scalar("rx", torch.mean(rx), step)
-        writer.add_scalar("ry", torch.mean(ry), step)
-        writer.add_scalar("cx", torch.mean(cx), step)
-        writer.add_scalar("cy", torch.mean(cy), step)
+        # writer.add_scalar("rx", torch.mean(rx), step)
+        # writer.add_scalar("ry", torch.mean(ry), step)
+        # writer.add_scalar("cx", torch.mean(cx), step)
+        # writer.add_scalar("cy", torch.mean(cy), step)
 
         writer.add_scalar("loss_g_gan", loss_dict["G_GAN"], step)
         writer.add_scalar("loss_g_gan_feat", loss_dict["G_GAN_Feat"], step)
@@ -225,12 +228,12 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ### display output images
         if step % 100 == 0:
             a = generate_label_color(generate_label_plain(input_label)).float().cuda()
-            b = real_image.float().cuda()
-            c = fake_image.float().cuda()
-            d = torch.cat([clothes_mask, clothes_mask, clothes_mask], 1)
-            e = warped
-            f = refined
-            combine = torch.cat([a[0], b[0], c[0], d[0], e[0], f[0]], 2).squeeze()
+            # b = real_image.float().cuda()
+            # c = fake_image.float().cuda()
+            # d = torch.cat([clothes_mask, clothes_mask, clothes_mask], 1)
+            # e = warped
+            # f = refined
+            combine = torch.cat([a[0]], 2).squeeze()
             cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
             writer.add_image("combine", (combine.data + 1) / 2.0, step)
             rgb = (cv_img * 255).astype(np.uint8)
