@@ -209,8 +209,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         # writer.add_scalar("cy", torch.mean(cy), step)
 
         writer.add_scalar("loss_g_gan", loss_dict["G_GAN"], step)
-        writer.add_scalar("loss_g_gan_feat", loss_dict["G_GAN_Feat"], step)
-        writer.add_scalar("loss_g_vgg", loss_dict["G_VGG"], step)
+        # writer.add_scalar("loss_g_gan_feat", loss_dict["G_GAN_Feat"], step)
+        # writer.add_scalar("loss_g_vgg", loss_dict["G_VGG"], step)
 
         ############### Backward Pass ####################
         # update generator weights
