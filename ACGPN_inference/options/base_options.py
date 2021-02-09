@@ -110,7 +110,7 @@ class BaseOptions:
 
         self.initialized = True
 
-    def parse(self, args, save=True):
+    def parse(self, args=None, save=True):
         if not self.initialized:
             self.initialize()
         self.opt = self.parser.parse_args(args=args)
