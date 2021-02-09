@@ -228,12 +228,14 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ### display output images
         if step % 100 == 0:
             a = generate_label_color(generate_label_plain(input_label)).float().cuda()
+            b = generate_label_color(generate_label_plain(data["label"])).float().cuda()
+            c = data["image"].float().cuda()
             # b = real_image.float().cuda()
             # c = fake_image.float().cuda()
             # d = torch.cat([clothes_mask, clothes_mask, clothes_mask], 1)
             # e = warped
             # f = refined
-            combine = torch.cat([a[0]], 2).squeeze()
+            combine = torch.cat([a[0], b[0], c[0]], 2).squeeze()
             cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
             writer.add_image("combine", (combine.data + 1) / 2.0, step)
             rgb = (cv_img * 255).astype(np.uint8)
