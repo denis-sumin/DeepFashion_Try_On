@@ -391,6 +391,7 @@ class Pix2PixHDModel(BaseModel):
             fake_image,
             clothes,
             arm_label,
+            dis_label,
             L1_loss,
             style_loss,
             fake_cl,

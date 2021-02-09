@@ -135,17 +135,29 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         all_clothes_label = changearm(data["label"])
 
         ############## Forward Pass ######################
-        (losses, fake_image, real_image, input_label, L1_loss, style_loss, clothes_mask, CE_loss, rgb, alpha,) = model(
-            Variable(data["label"].cuda()),
-            Variable(data["edge"].cuda()),
-            Variable(img_fore.cuda()),
-            Variable(mask_clothes.cuda()),
-            Variable(data["color"].cuda()),
-            Variable(all_clothes_label.cuda()),
-            Variable(data["image"].cuda()),
-            Variable(data["pose"].cuda()),
-            Variable(data["image"].cuda()),
-            Variable(mask_fore.cuda()),
+        (
+            losses,
+            fake_image,
+            real_image,
+            input_label,
+            input_label_arm_refined,
+            L1_loss,
+            style_loss,
+            clothes_mask,
+            CE_loss,
+            rgb,
+            alpha,
+        ) = model(
+            Variable(data["label"].cuda()),  # label
+            Variable(data["edge"].cuda()),  # pre_clothes_mask
+            Variable(img_fore.cuda()),  # img_fore
+            Variable(mask_clothes.cuda()),  # clothes_mask
+            Variable(data["color"].cuda()),  # clothes
+            Variable(all_clothes_label.cuda()),  # all_clothes_label
+            Variable(data["image"].cuda()),  # real_image
+            Variable(data["pose"].cuda()),  # pose
+            Variable(data["image"].cuda()),  # grid
+            Variable(mask_fore.cuda()),  # mask_fore
         )
 
         # sum per device losses
