@@ -244,14 +244,14 @@ class Pix2PixHDModel(BaseModel):
             # load networks
             if not self.isTrain or opt.continue_train or opt.load_pretrain:
                 pretrained_path = "" if not self.isTrain else opt.load_pretrain
-                self.load_network(self.Unet, "U", opt.which_epoch, pretrained_path)
+                # self.load_network(self.Unet, "U", opt.which_epoch, pretrained_path)
                 self.load_network(self.G1, "G1", opt.which_epoch, pretrained_path)
-                self.load_network(self.G2, "G2", opt.which_epoch, pretrained_path)
-                self.load_network(self.G, "G", opt.which_epoch, pretrained_path)
-                self.load_network(self.D, "D", opt.which_epoch, pretrained_path)
+                # self.load_network(self.G2, "G2", opt.which_epoch, pretrained_path)
+                # self.load_network(self.G, "G", opt.which_epoch, pretrained_path)
+                # self.load_network(self.D, "D", opt.which_epoch, pretrained_path)
                 self.load_network(self.D1, "D1", opt.which_epoch, pretrained_path)
-                self.load_network(self.D2, "D2", opt.which_epoch, pretrained_path)
-                self.load_network(self.D3, "D3", opt.which_epoch, pretrained_path)
+                # self.load_network(self.D2, "D2", opt.which_epoch, pretrained_path)
+                # self.load_network(self.D3, "D3", opt.which_epoch, pretrained_path)
                 # self.load_network(self.optimizer_G, 'OG', opt.which_epoch, pretrained_path)
                 # self.load_network(self.optimizer_D, 'OD', opt.which_epoch, pretrained_path)
 
@@ -521,14 +521,14 @@ class Pix2PixHDModel(BaseModel):
         return fake_image
 
     def save(self, which_epoch):
-        self.save_network(self.Unet, "U", which_epoch, self.gpu_ids)
-        self.save_network(self.G, "G", which_epoch, self.gpu_ids)
+        # self.save_network(self.Unet, "U", which_epoch, self.gpu_ids)
+        # self.save_network(self.G, "G", which_epoch, self.gpu_ids)
         self.save_network(self.G1, "G1", which_epoch, self.gpu_ids)
-        self.save_network(self.G2, "G2", which_epoch, self.gpu_ids)
-        self.save_network(self.D, "D", which_epoch, self.gpu_ids)
+        # self.save_network(self.G2, "G2", which_epoch, self.gpu_ids)
+        # self.save_network(self.D, "D", which_epoch, self.gpu_ids)
         self.save_network(self.D1, "D1", which_epoch, self.gpu_ids)
-        self.save_network(self.D2, "D2", which_epoch, self.gpu_ids)
-        self.save_network(self.D3, "D3", which_epoch, self.gpu_ids)
+        # self.save_network(self.D2, "D2", which_epoch, self.gpu_ids)
+        # self.save_network(self.D3, "D3", which_epoch, self.gpu_ids)
         self.save_network(self.optimizer_G, "OG", which_epoch, self.gpu_ids)
         self.save_network(self.optimizer_D, "OD", which_epoch, self.gpu_ids)
 
