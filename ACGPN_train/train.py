@@ -15,7 +15,6 @@ from torch.autograd import Variable
 
 from data.data_loader import CreateDataLoader
 
-writer = SummaryWriter("runs/uniform_all")
 SIZE = 320
 NC = 14
 
@@ -95,6 +94,8 @@ def changearm(old_label):
 os.makedirs("sample", exist_ok=True)
 opt = TrainOptions().parse()
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, "iter.txt")
+
+writer = SummaryWriter(f"runs/{opt.name}")
 
 if opt.continue_train:
     try:
