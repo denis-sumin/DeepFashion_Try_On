@@ -131,10 +131,10 @@ class Pix2PixHDModel(BaseModel):
         # Main Generator
         with torch.no_grad():
             pass
-        self.Unet = networks.define_UnetMask(4, self.gpu_ids)
+        # self.Unet = networks.define_UnetMask(4, self.gpu_ids)
         self.G1 = networks.define_Refine(37, 14, self.gpu_ids)
-        self.G2 = networks.define_Refine(19 + 18, 1, self.gpu_ids)
-        self.G = networks.define_Refine(24, 3, self.gpu_ids)
+        # self.G2 = networks.define_Refine(19 + 18, 1, self.gpu_ids)
+        # self.G = networks.define_Refine(24, 3, self.gpu_ids)
 
         # ipdb.set_trace()
         self.tanh = nn.Tanh()
@@ -147,24 +147,24 @@ class Pix2PixHDModel(BaseModel):
             netD_input_nc = input_nc + opt.output_nc
             netB_input_nc = opt.output_nc * 2
             self.D1 = self.get_D(34 + 14 + 3, opt)
-            self.D2 = self.get_D(20 + 18, opt)
-            self.D = self.get_D(27, opt)
-            self.D3 = self.get_D(7, opt)
+            # self.D2 = self.get_D(20 + 18, opt)
+            # self.D = self.get_D(27, opt)
+            # self.D3 = self.get_D(7, opt)
             # self.netB = networks.define_B(netB_input_nc, opt.output_nc, 32, 3, 3, opt.norm, gpu_ids=self.gpu_ids)
 
-            self.Unet.train(False)
-            self.Unet.requires_grad_(False)
-            self.G2.train(False)
-            self.G2.requires_grad_(False)
-            self.G.train(False)
-            self.G.requires_grad_(False)
-
-            self.D.train(False)
-            self.D.requires_grad_(False)
-            self.D2.train(False)
-            self.D2.requires_grad_(False)
-            self.D3.train(False)
-            self.D3.requires_grad_(False)
+            # self.Unet.train(False)
+            # self.Unet.requires_grad_(False)
+            # self.G2.train(False)
+            # self.G2.requires_grad_(False)
+            # self.G.train(False)
+            # self.G.requires_grad_(False)
+            #
+            # self.D.train(False)
+            # self.D.requires_grad_(False)
+            # self.D2.train(False)
+            # self.D2.requires_grad_(False)
+            # self.D3.train(False)
+            # self.D3.requires_grad_(False)
 
         if self.opt.verbose:
             print("---------- Networks initialized -------------")
