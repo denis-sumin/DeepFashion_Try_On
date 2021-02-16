@@ -306,15 +306,15 @@ class Pix2PixHDModel(BaseModel):
     def forward(
         self,
         label,
-        pre_clothes_mask,
-        img_fore,
-        clothes_mask,
-        clothes,
-        all_clothes_label,
-        real_image,
-        pose,
-        grid,
-        mask_fore,
+        pre_clothes_mask,  # edge (clothes image)
+        img_fore,  # foreground of the person's image
+        clothes_mask,  # mask of person's current clothes
+        clothes,  # color – clothes image
+        all_clothes_label,  # label with clothes + arms merged
+        real_image,  # person's image (to put clothes on)
+        pose,  # pose data
+        grid,  # person's image (to put clothes on)
+        mask_fore,  # mask of the person (not background label)
     ):
         # Encode Inputs
         input_label, masked_label, all_clothes_label = self.encode_input(label, clothes_mask, all_clothes_label)
