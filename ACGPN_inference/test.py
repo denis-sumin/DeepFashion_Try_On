@@ -137,16 +137,17 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ############## Forward Pass ######################
         (
             losses,
-            fake_image,
+            # fake_image,
             real_image,
+            G1_in,
             input_label,
             input_label_arm_refined,
             L1_loss,
-            style_loss,
-            clothes_mask,
+            # style_loss,
+            # clothes_mask,
             CE_loss,
             rgb,
-            alpha,
+            # alpha,
         ) = model(
             Variable(data["label"].cuda()),  # label
             Variable(data["edge"].cuda()),  # pre_clothes_mask
@@ -202,6 +203,13 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ############## Display results and errors ##########
 
         ### display output images
+
+        i1 = data["image"].cuda()
+        i2 = generate_label_color(data["label"]).float().cuda()
+        i31 = torch.FloatTensor((pre_clothes_mask.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
+        i32 = data["color"].cuda()
+        # i33
+
         a = generate_label_color(generate_label_plain(input_label)).float().cuda()
         b = real_image.float().cuda()
         c = fake_image.float().cuda()
