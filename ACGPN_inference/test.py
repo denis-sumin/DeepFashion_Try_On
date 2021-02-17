@@ -20,6 +20,9 @@ SIZE = 320
 NC = 14
 
 
+opt = TrainOptions().parse()
+
+
 def generate_label_plain(inputs):
     size = inputs.size()
     pred_batch = []
@@ -35,10 +38,10 @@ def generate_label_plain(inputs):
     return label_batch
 
 
-def generate_label_color(inputs):
+def generate_label_color(inputs, num_labels=opt.label_nc):
     label_batch = []
     for i in range(len(inputs)):
-        label_batch.append(util.tensor2label(inputs[i], opt.label_nc))
+        label_batch.append(util.tensor2label(inputs[i], num_labels))
     label_batch = np.array(label_batch)
     label_batch = label_batch * 2 - 1
     input_label = torch.from_numpy(label_batch)
@@ -78,7 +81,6 @@ def changearm(old_label):
     return label
 
 
-opt = TrainOptions().parse()
 os.makedirs(opt.results_dir, exist_ok=True)
 iter_path = os.path.join(opt.checkpoints_dir, opt.name, "iter.txt")
 if opt.continue_train:
@@ -211,21 +213,32 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         base_filename = os.path.splitext(data["name"][0])[0]
         ce_loss_values[base_filename] = float(CE_loss.detach().cpu())
+
+        G1_in_cpu = G1_in.detach().cpu()
+        G1_in_cloth_mask = G1_in_cpu[:, 0]
+        G1_in_cloth_image = G1_in_cpu[:, 1:4]
+        G1_in_label = G1_in_cpu[:, 4:4 + NC]
+        G1_in_pose = G1_in_cpu[:, 4 + NC:-1]
+        G1_in_noise = G1_in_cpu[:, -1]
+
+        G1_in_label_vis = generate_label_color(generate_label_plain(G1_in_label))
+        G1_in_pose_vis = generate_label_color(
+            generate_discrete_label(G1_in_pose, G1_in_pose.shape[1], False),
+            G1_in_pose.shape[1]
+        )
+
         for name, tensor, put_palette in (
             ("source_image", data["image"], False),
             ("source_label", generate_label_color(data["label"]), False),
 
-            ("G1_in_1", G1_in[:, 0].detach().cpu(), False),
-            ("G1_in_1", G1_in[:, 0].detach().cpu(), False),
-            ("G1_in_2", G1_in[:, 1:4].detach().cpu(), False),
-            ("G1_in_3", generate_label_color(generate_label_plain(G1_in[:, 4:4 + 14])).detach().cpu(), False),
-            ("G1_in_4", (generate_discrete_label(G1_in[:, 4 + 14:-1].detach(), 18, False) > 0).cpu(), False),
-            ("G1_in_5", G1_in[:, -1].squeeze().detach().cpu(), False),
+            ("G1_in_1", G1_in_cloth_mask, False),
+            ("G1_in_2", G1_in_cloth_image, False),
+            ("G1_in_3", G1_in_label_vis, False),
+            ("G1_in_4", G1_in_pose_vis, False),
+            ("G1_in_5", G1_in_noise, False),
 
-            ("G1_out", generate_label_color(generate_label_plain(input_label)).detach().cpu(), False),
-            ("G1_gt", generate_label_color(
-                (data["label"] * (1 - mask_clothes))
-            ), False)
+            ("G1_out", generate_label_color(generate_label_plain(input_label)), False),
+            ("G1_gt", generate_label_color((data["label"] * (1 - mask_clothes))), False)
         ):
             d_image = tensor.squeeze().numpy().copy()
             if len(d_image.shape) == 3:
