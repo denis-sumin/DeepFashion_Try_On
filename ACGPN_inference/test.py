@@ -238,19 +238,19 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
             imageio.imwrite(opt.results_dir + "/" + output_name, d_image, quality=97)
 
-        a = generate_label_color(generate_label_plain(input_label)).float().cuda()
-        b = real_image.float().cuda()
-        c = fake_image.float().cuda()
-        d = torch.cat([clothes_mask, clothes_mask, clothes_mask], 1)
-        combine = torch.cat([a[0], d[0], b[0], c[0], rgb[0]], 2).squeeze()
-        # combine=c[0].squeeze()
-        cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
-        if step % 1 == 0:
-            writer.add_image("combine", (combine.data + 1) / 2.0, step)
-            rgb = (cv_img * 255).astype(np.uint8)
-            bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
-            n = str(step) + ".jpg"
-            cv2.imwrite(opt.results_dir + "/" + data["name"][0], bgr)
+        # a = generate_label_color(generate_label_plain(input_label)).float().cuda()
+        # b = real_image.float().cuda()
+        # c = fake_image.float().cuda()
+        # d = torch.cat([clothes_mask, clothes_mask, clothes_mask], 1)
+        # combine = torch.cat([a[0], d[0], b[0], c[0], rgb[0]], 2).squeeze()
+        # # combine=c[0].squeeze()
+        # cv_img = (combine.permute(1, 2, 0).detach().cpu().numpy() + 1) / 2
+        # if step % 1 == 0:
+        #     writer.add_image("combine", (combine.data + 1) / 2.0, step)
+        #     rgb = (cv_img * 255).astype(np.uint8)
+        #     bgr = cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+        #     n = str(step) + ".jpg"
+        #     cv2.imwrite(opt.results_dir + "/" + data["name"][0], bgr)
         step += 1
         print(step, time.time() - epoch_start_time, (time.time() - epoch_start_time) / step)
         ### save latest model
