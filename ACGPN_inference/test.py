@@ -209,7 +209,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         ### display output images
 
-        ce_loss_values[data["name"][0]] = float(CE_loss.detach().cpu())
+        base_filename = os.path.splitext(data["name"][0])[0]
+        ce_loss_values[base_filename] = float(CE_loss.detach().cpu())
         for name, tensor, put_palette in (
             ("source_image", data["image"], False),
             ("source_label", generate_label_color(data["label"]), False),
@@ -234,7 +235,6 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             d_image = d_image.astype(np.uint8)
             # print(image.shape, image.dtype)
 
-            base_filename = os.path.splitext(data["name"][0])
             output_name = f"{base_filename}_{name}.jpg"
 
             imageio.imwrite(opt.results_dir + "/" + output_name, d_image, quality=97)
