@@ -226,10 +226,10 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         ):
             d_image = tensor.squeeze().numpy().copy()
             if len(d_image.shape) == 3:
-                d_image = numpy.moveaxis(d_image, 0, -1)
+                d_image = np.moveaxis(d_image, 0, -1)
             if not put_palette:
                 d_image = (d_image + 1.) / 2. * 255
-            d_image = d_image.astype(numpy.uint8)
+            d_image = d_image.astype(np.uint8)
             # print(image.shape, image.dtype)
 
             base_filename = os.path.splitext(data["name"][0])
