@@ -109,6 +109,8 @@ save_delta = total_steps % opt.save_latest_freq
 
 step = 0
 
+ce_loss_values = {}
+
 for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
     epoch_start_time = time.time()
     if epoch != start_epoch:
@@ -204,11 +206,35 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
 
         ### display output images
 
-        i1 = data["image"].cuda()
-        i2 = generate_label_color(data["label"]).float().cuda()
-        i31 = torch.FloatTensor((pre_clothes_mask.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
-        i32 = data["color"].cuda()
-        # i33
+        ce_loss_values[data["name"][0]] = float(CE_loss.detach().cpu())
+        for name, tensor, put_palette in (
+            ("source_image", data["image"], False),
+            ("source_label", generate_label_color(data["label"]), False),
+
+            ("G1_in_1", G1_in[:, 0].detach().cpu(), False),
+            ("G1_in_1", G1_in[:, 0].detach().cpu(), False),
+            ("G1_in_2", G1_in[:, 1:4].detach().cpu(), False),
+            ("G1_in_3", generate_label_color(generate_label_plain(G1_in[:, 4:4 + 14])).detach().cpu(), False),
+            ("G1_in_4", (generate_discrete_label(G1_in[:, 4 + 14:-1].detach(), 18, False) > 0).cpu(), False),
+            ("G1_in_5", G1_in[:, -1].squeeze().detach().cpu(), False),
+
+            ("G1_out", generate_label_color(generate_label_plain(input_label)).detach().cpu(), False),
+            ("G1_gt", generate_label_color(
+                (data["label"] * (1 - mask_clothes))
+            ), False)
+        ):
+            d_image = tensor.squeeze().numpy().copy()
+            if len(d_image.shape) == 3:
+                d_image = numpy.moveaxis(d_image, 0, -1)
+            if not put_palette:
+                d_image = (d_image + 1.) / 2. * 255
+            d_image = d_image.astype(numpy.uint8)
+            # print(image.shape, image.dtype)
+
+            base_filename = os.path.splitext(data["name"][0])
+            output_name = f"{base_filename}_{name}.jpg"
+
+            imageio.imwrite(opt.results_dir + "/" + output_name, d_image, quality=97)
 
         a = generate_label_color(generate_label_plain(input_label)).float().cuda()
         b = real_image.float().cuda()
@@ -233,6 +259,9 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             pass
         if epoch_iter >= dataset_size:
             break
+
+    with open(os.path.join(opt.results_dir, "ce_losses.json"), "w") as f:
+        json.dump(ce_loss_values, f)
 
     # end of epoch
     iter_end_time = time.time()
