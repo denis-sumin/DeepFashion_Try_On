@@ -11,6 +11,7 @@ from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
 from data.data_loader import CreateDataLoader
+from models.pix2pixHD_model import generate_discrete_label
 
 writer = SummaryWriter("runs/G1G2")
 SIZE = 320
