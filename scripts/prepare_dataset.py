@@ -190,7 +190,7 @@ def process_many_files(
 
     items_count = len(filenames)
     print_every = max(1, int(0.01 * items_count))
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+    with multiprocessing.Pool(multiprocessing.cpu_count() * 2) as pool:
         for idx, _ in enumerate(pool.imap_unordered(partial(process_one_file_star, function), filenames)):
             if not idx % print_every:
                 print(f"{idx} / {items_count}", end="\r")
