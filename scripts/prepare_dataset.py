@@ -310,6 +310,10 @@ def main():
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
     process_label_files(labels_src_dir, labels_dst_dir)
 
+    print("Creating source label visualizations...")
+    labels_src_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_vis"))
+    make_labels_vis(labels_src_dir, labels_src_vis_dir)
+
     print("Creating label visualizations...")
     labels_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_vis"))
     make_labels_vis(labels_dst_dir, labels_vis_dir)
