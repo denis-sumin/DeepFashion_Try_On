@@ -136,7 +136,7 @@ def process_one_label_file(src_path: str, dst_path: str) -> None:
         6: 4,  # Dress -> Upper-clothes
         7: 4,  # Coat -> Upper-clothes
         8: 7,  # Socks -> Noise
-        10: 7,  # Jumpsuits -> Upper-clothes
+        10: 4,  # Jumpsuits -> Upper-clothes
         11: 7,  # Scarf -> Noise
         12: 8,  # Skirt -> Pants
     }
