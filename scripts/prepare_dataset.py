@@ -100,7 +100,7 @@ def get_palette(num_cls):
 def run_openpose(source_images_dir: str, dst_dir: str):
     cwd = "/root/openpose"
     env = {
-        "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES"),
+        "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES", ""),
     }
     cmd = [
         "./build/examples/openpose/openpose.bin",
@@ -123,7 +123,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
 def run_segmentation(source_images_dir: str, dst_dir: str, segmentation: SegmentationVariant):
     cwd = "/root/Self-Correction-Human-Parsing"
     env = {
-        "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES"),
+        "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES", ""),
         "PATH": "/usr/local/bin:/usr/bin",
         "LD_LIBRARY_PATH": "/usr/local/cuda-10.0/lib64",
     }
