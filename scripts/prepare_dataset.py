@@ -13,6 +13,66 @@ import numpy
 import PIL.Image
 
 
+class SegmentationVariant:
+    dataset = None
+    labels_map = None
+    model_path = None
+
+
+class LIPSegmentation(SegmentationVariant):
+    dataset = "lip"
+    model_path = "checkpoints/lip.pth"
+    labels_map = {
+        0: 0,  # Background
+        2: 1,  # Hair
+        5: 4,  # Upper-clothes
+        9: 8,  # Pants
+        13: 12,  # Face
+        14: 11,  # Left-arm
+        15: 13,  # Right-arm
+        16: 9,  # Left-leg
+        17: 10,  # Right-leg
+        18: 5,  # Left-shoe
+        19: 6,  # Right-shoe
+        # additional
+        1: 1,  # Hat -> Hair
+        4: 12,  # Sunglasses -> Face
+        3: 7,  # Glove -> Noise
+        6: 4,  # Dress -> Upper-clothes
+        7: 4,  # Coat -> Upper-clothes
+        8: 7,  # Socks -> Noise
+        10: 4,  # Jumpsuits -> Upper-clothes
+        11: 7,  # Scarf -> Noise
+        12: 8,  # Skirt -> Pants
+    }
+
+
+class ATRSegmentation(SegmentationVariant):
+    dataset = "atr"
+    model_path = "checkpoints/atr.pth"
+    labels_map = {
+        0: 0,  # Background
+        2: 1,  # Hair
+        4: 4,  # Upper-clothes
+        6: 8,  # Pants
+        9: 5,  # Left-shoe
+        10: 6,  # Right-shoe
+        11: 12,  # Face
+        12: 9,  # Left-leg
+        13: 10,  # Right-leg
+        14: 11,  # Left-arm
+        15: 13,  # Right-arm
+        # additional
+        1: 1,  # Hat -> Hair
+        3: 12,  # Sunglasses -> Face
+        5: 8,  # Skirt -> Pants
+        7: 4,  # Dress -> Upper-clothes
+        8: 7,  # Belt -> Noise
+        16: 7,  # Bag -> Noise
+        17: 7,  # Scarf -> Noise
+    }
+
+
 def get_palette(num_cls):
     """ Returns the color map for visualizing the segmentation mask.
     Args:
@@ -60,7 +120,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
     subprocess.run(args=cmd, cwd=cwd, env=env)
 
 
-def run_segmentation(source_images_dir: str, dst_dir: str):
+def run_segmentation(source_images_dir: str, dst_dir: str, segmentation: SegmentationVariant):
     cwd = "/root/Self-Correction-Human-Parsing"
     env = {
         "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES"),
@@ -71,9 +131,9 @@ def run_segmentation(source_images_dir: str, dst_dir: str):
         "./venv/bin/python",
         "simple_extractor.py",
         "--dataset",
-        "lip",
+        segmentation.dataset,
         "--model-restore",
-        "checkpoints/lip.pth",
+        segmentation.model_path,
         "--input-dir",
         source_images_dir,
         "--output-dir",
@@ -116,34 +176,11 @@ def prepare_one_cloth_mask(src_path: str, dst_path: str) -> None:
     imageio.imwrite(dst_path, output_mask)
 
 
-def process_one_label_file(src_path: str, dst_path: str) -> None:
-    lip_labels_map = {
-        0: 0,  # Background
-        2: 1,  # Hair
-        5: 4,  # Upper-clothes
-        9: 8,  # Pants
-        13: 12,  # Face
-        14: 11,  # Left-arm
-        15: 13,  # Right-arm
-        16: 9,  # Left-leg
-        17: 10,  # Right-leg
-        18: 5,  # Left-shoe
-        19: 6,  # Right-shoe
-        # additional
-        1: 1,  # Hat -> Hair
-        4: 12,  # Sunglasses -> Face
-        3: 7,  # Glove -> Noise
-        6: 4,  # Dress -> Upper-clothes
-        7: 4,  # Coat -> Upper-clothes
-        8: 7,  # Socks -> Noise
-        10: 4,  # Jumpsuits -> Upper-clothes
-        11: 7,  # Scarf -> Noise
-        12: 8,  # Skirt -> Pants
-    }
-
+def process_one_label_file(segmentation: SegmentationVariant,
+                           src_path: str, dst_path: str) -> None:
     image = imageio.imread(src_path)
     image_new = numpy.zeros(shape=image.shape, dtype=image.dtype)
-    for key, value in lip_labels_map.items():
+    for key, value in segmentation.labels_map.items():
         image_new[image == key] = value
     imageio.imwrite(dst_path, image_new)
 
@@ -200,8 +237,9 @@ def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
     process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".png")
 
 
-def process_label_files(src_dir: str, dst_dir: str) -> None:
-    process_many_files(process_one_label_file, src_dir, dst_dir, (".png",), ".png")
+def process_label_files(segmentation: SegmentationVariant, src_dir: str, dst_dir: str) -> None:
+    process_one_label_file_ = partial(process_one_label_file, segmentation)
+    process_many_files(process_one_label_file_, src_dir, dst_dir, (".png",), ".png")
 
 
 def make_labels_vis(src_dir: str, dst_dir: str) -> None:
@@ -283,11 +321,19 @@ def get_args():
     parser.add_argument("--make-index", dest="make_index", type=int, default=0)
     parser.add_argument("--skip-openpose", dest="skip_openpose", action="store_true")
     parser.add_argument("--skip-segmentation", dest="skip_segmentation", action="store_true")
+    parser.add_argument("--segm", dest="segmentation", required=True, choices=["lip", "atr"])
     return parser.parse_args()
 
 
 def main():
     args = get_args()
+
+    if args.segmentation == "lip":
+        segmentation = LIPSegmentation()
+    elif args.segmentation == "atr":
+        segmentation = ATRSegmentation()
+    else:
+        raise ValueError("args.segmentation should be one of: lip, atr")
 
     cloths_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_color"))
     models_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
@@ -304,11 +350,11 @@ def main():
     labels_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src"))
     if not args.skip_segmentation:
         print("Running human segmentation...")
-        run_segmentation(models_img_dir, labels_src_dir)
+        run_segmentation(models_img_dir, labels_src_dir, segmentation)
 
     print("Processing label files...")
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
-    process_label_files(labels_src_dir, labels_dst_dir)
+    process_label_files(segmentation, labels_src_dir, labels_dst_dir)
 
     print("Creating source label visualizations...")
     labels_src_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_vis"))
