@@ -372,6 +372,7 @@ def get_args():
     parser.add_argument("--skip-openpose", dest="skip_openpose", action="store_true")
     parser.add_argument("--skip-segmentation", dest="skip_segmentation", action="store_true")
     parser.add_argument("--segm", dest="segmentation", required=True, choices=["lip", "atr", "atr+lip"])
+    parser.add_argument("--filter-keys", dest="filter_keys_json", type=str, default=None)
     return parser.parse_args()
 
 
@@ -380,6 +381,14 @@ def main():
 
     cloths_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_color"))
     models_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
+
+    if args.filter_keys_json:
+        with open(args.filter_keys_json) as f:
+            filter_keys = json.load(f)
+        print(f"Filtering input images with the list of keys ({len(filter_keys)} items)...")
+        for item in filter_keys:
+            os.remove(os.path.join(cloths_img_dir, f"{item}.jpg"))
+            os.remove(os.path.join(models_img_dir, f"{item}.jpg"))
 
     openpose_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose_src"))
     if not args.skip_openpose:
