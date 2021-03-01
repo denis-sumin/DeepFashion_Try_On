@@ -1,11 +1,12 @@
 import argparse
+import collections.abc
 import json
 import multiprocessing
 import os
 import random
 import subprocess
 from functools import partial
-from typing import Callable, Sequence, Set, Tuple
+from typing import Callable, List, Sequence, Set, Tuple, Type, Union
 
 import cv2
 import imageio
@@ -73,8 +74,14 @@ class ATRSegmentation(SegmentationVariant):
     }
 
 
+segmentation_mapping = {
+    "lip": LIPSegmentation,
+    "atr": ATRSegmentation,
+}
+
+
 def get_palette(num_cls):
-    """ Returns the color map for visualizing the segmentation mask.
+    """Returns the color map for visualizing the segmentation mask.
     Args:
         num_cls: Number of classes
     Returns:
@@ -89,9 +96,9 @@ def get_palette(num_cls):
         palette[j * 3 + 2] = 0
         i = 0
         while lab:
-            palette[j * 3 + 0] |= (((lab >> 0) & 1) << (7 - i))
-            palette[j * 3 + 1] |= (((lab >> 1) & 1) << (7 - i))
-            palette[j * 3 + 2] |= (((lab >> 2) & 1) << (7 - i))
+            palette[j * 3 + 0] |= ((lab >> 0) & 1) << (7 - i)
+            palette[j * 3 + 1] |= ((lab >> 1) & 1) << (7 - i)
+            palette[j * 3 + 2] |= ((lab >> 2) & 1) << (7 - i)
             i += 1
             lab >>= 3
     return palette
@@ -120,7 +127,7 @@ def run_openpose(source_images_dir: str, dst_dir: str):
     subprocess.run(args=cmd, cwd=cwd, env=env)
 
 
-def run_segmentation(source_images_dir: str, dst_dir: str, segmentation: SegmentationVariant):
+def run_segmentation(source_images_dir: str, dst_dir: str, segmentation: Type[SegmentationVariant]):
     cwd = "/root/Self-Correction-Human-Parsing"
     env = {
         "CUDA_VISIBLE_DEVICES": os.getenv("CUDA_VISIBLE_DEVICES", ""),
@@ -176,13 +183,30 @@ def prepare_one_cloth_mask(src_path: str, dst_path: str) -> None:
     imageio.imwrite(dst_path, output_mask)
 
 
-def process_one_label_file(segmentation: SegmentationVariant,
-                           src_path: str, dst_path: str) -> None:
+def process_one_label_file(segmentation: SegmentationVariant, src_path: str, dst_path: str) -> None:
     image = imageio.imread(src_path)
     image_new = numpy.zeros(shape=image.shape, dtype=image.dtype)
     for key, value in segmentation.labels_map.items():
         image_new[image == key] = value
     imageio.imwrite(dst_path, image_new)
+
+
+BACKGROUND_LABEL = 0
+FACE_LABEL = 12
+
+
+def merge_one_label_file_atr_lip(atr_path: str, lip_path: str, dst_path: str):
+    label_atr = imageio.imread(atr_path)
+    label_lip = imageio.imread(lip_path)
+
+    face_lip = label_lip == FACE_LABEL
+    face_atr = label_atr == FACE_LABEL
+    face_diff = face_atr != face_lip
+
+    result_image = label_atr  # .copy() - not needed for now
+    result_image[face_diff] = BACKGROUND_LABEL
+
+    imageio.imwrite(dst_path, result_image)
 
 
 def make_one_label_vis(src_path: str, dst_path: str) -> None:
@@ -215,13 +239,35 @@ def process_one_file_star(func: Callable, arg: Tuple[str, str]) -> None:
 
 
 def process_many_files(
-    function: Callable, src_dir: str, dst_dir: str, src_extensions: Sequence[str], dst_extension: str
+    function: Callable, src_dirs: Union[str, List[str]], dst_dir: str, src_extensions: Sequence[str], dst_extension: str
 ) -> None:
     os.makedirs(dst_dir, exist_ok=True)
 
+    if isinstance(src_dirs, str):
+        filenames_list = os.listdir(src_dirs)
+        src_dirs = [src_dirs]
+    elif isinstance(src_dirs, collections.abc.Sequence):
+        filename_lists = []
+        for src_dir in src_dirs:
+            filename_lists.append(set(os.listdir(src_dir)))
+        filenames_union = set().union(*filename_lists)
+        filenames_intersection = filename_lists[0].intersection(*filename_lists)
+        if filenames_union == filenames_intersection:
+            filenames_list = list(filenames_union)
+        else:
+            raise ValueError(
+                f"function `process_many_files` got several items in `src_dirs` argument: {src_dirs}. "
+                "Union of filenames in these folders doesn't match the intersection"
+            )
+    else:
+        raise ValueError(f"`src_dirs` should be either a single string or a sequence of strings. Got: {src_dirs}")
+
     filenames = [
-        (os.path.join(src_dir, filename), os.path.join(dst_dir, os.path.splitext(filename)[0] + dst_extension))
-        for filename in sorted(os.listdir(src_dir))
+        (
+            tuple([os.path.join(src_dir, filename) for src_dir in src_dirs])
+            + (os.path.join(dst_dir, os.path.splitext(filename)[0] + dst_extension),)
+        )
+        for filename in sorted(filenames_list)
         if os.path.splitext(filename)[-1] in src_extensions
     ]
 
@@ -237,9 +283,13 @@ def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
     process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".png")
 
 
-def process_label_files(segmentation: SegmentationVariant, src_dir: str, dst_dir: str) -> None:
+def process_label_files(segmentation: Type[SegmentationVariant], src_dir: str, dst_dir: str) -> None:
     process_one_label_file_ = partial(process_one_label_file, segmentation)
     process_many_files(process_one_label_file_, src_dir, dst_dir, (".png",), ".png")
+
+
+def merge_labels_atr_lip(src_atr_dir: str, src_lip_dir: str, dst_dir: str) -> None:
+    process_many_files(merge_one_label_file_atr_lip, [src_atr_dir, src_lip_dir], dst_dir, (".png",), ".png")
 
 
 def make_labels_vis(src_dir: str, dst_dir: str) -> None:
@@ -321,19 +371,12 @@ def get_args():
     parser.add_argument("--make-index", dest="make_index", type=int, default=0)
     parser.add_argument("--skip-openpose", dest="skip_openpose", action="store_true")
     parser.add_argument("--skip-segmentation", dest="skip_segmentation", action="store_true")
-    parser.add_argument("--segm", dest="segmentation", required=True, choices=["lip", "atr"])
+    parser.add_argument("--segm", dest="segmentation", required=True, choices=["lip", "atr", "atr+lip"])
     return parser.parse_args()
 
 
 def main():
     args = get_args()
-
-    if args.segmentation == "lip":
-        segmentation = LIPSegmentation()
-    elif args.segmentation == "atr":
-        segmentation = ATRSegmentation()
-    else:
-        raise ValueError("args.segmentation should be one of: lip, atr")
 
     cloths_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_color"))
     models_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
@@ -347,18 +390,41 @@ def main():
     pose_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_pose"))
     process_pose_files(openpose_src_dir, pose_dst_dir)
 
-    labels_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src"))
-    if not args.skip_segmentation:
-        print("Running human segmentation...")
-        run_segmentation(models_img_dir, labels_src_dir, segmentation)
-
-    print("Processing label files...")
     labels_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label"))
-    process_label_files(segmentation, labels_src_dir, labels_dst_dir)
+    if args.segmentation == "atr+lip":
+        labels_src_atr_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_atr"))
+        labels_atr_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_atr"))
+        if not args.skip_segmentation:
+            print("Running human segmentation, model ATR...")
+            run_segmentation(models_img_dir, labels_src_atr_dir, ATRSegmentation)
 
-    print("Creating source label visualizations...")
-    labels_src_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_vis"))
-    make_labels_vis(labels_src_dir, labels_src_vis_dir)
+        print("Processing label files...")
+        process_label_files(ATRSegmentation, labels_src_atr_dir, labels_atr_dir)
+
+        labels_src_lip_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_lip"))
+        labels_lip_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_lip"))
+        if not args.skip_segmentation:
+            print("Running human segmentation, model LIP...")
+            run_segmentation(models_img_dir, labels_src_lip_dir, LIPSegmentation)
+
+        print("Processing label files...")
+        process_label_files(LIPSegmentation, labels_src_lip_dir, labels_lip_dir)
+
+        print("Merging ATR labels with face label from LIP...")
+        merge_labels_atr_lip(labels_atr_dir, labels_lip_dir, labels_dst_dir)
+    else:
+        segmentation = segmentation_mapping[args.segmentation]
+        labels_src_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src"))
+        if not args.skip_segmentation:
+            print("Running human segmentation...")
+            run_segmentation(models_img_dir, labels_src_dir, segmentation)
+
+        print("Processing label files...")
+        process_label_files(segmentation, labels_src_dir, labels_dst_dir)
+
+        print("Creating source label visualizations...")
+        labels_src_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_src_vis"))
+        make_labels_vis(labels_src_dir, labels_src_vis_dir)
 
     print("Creating label visualizations...")
     labels_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_label_vis"))
