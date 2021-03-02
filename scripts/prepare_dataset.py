@@ -384,7 +384,7 @@ def main():
     models_img_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_img"))
 
     if args.exclude_keys_json:
-        with open(args.filter_keys_json) as f:
+        with open(args.exclude_keys_json) as f:
             exclude_keys = json.load(f)
         print(f"Excluding input images from the list of keys ({len(exclude_keys)} items)...")
         for item in exclude_keys:
@@ -392,7 +392,7 @@ def main():
             os.remove(os.path.join(models_img_dir, f"{item}.jpg"))
 
     if args.include_keys_json:
-        with open(args.filter_keys_json) as f:
+        with open(args.include_keys_json) as f:
             include_keys = set(json.load(f))
         print(f"Including input images from the list of keys ({len(include_keys)} items)...")
         filenames_cloths = [filename.replace(".jpg", "") for filename in os.listdir(cloths_img_dir)]
