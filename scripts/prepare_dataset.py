@@ -155,8 +155,17 @@ def prepare_one_cloth_mask(src_path: str, dst_path: str) -> None:
     #     continue
 
     src_image = imageio.imread(src_path)
+    try:
+        channels_num = src_image.shape[2]
+    except IndexError:
+        channels_num = 1
 
-    gray = cv2.cvtColor(src_image, cv2.COLOR_RGB2GRAY)
+    if channels_num == 3:
+        gray = cv2.cvtColor(src_image, cv2.COLOR_RGB2GRAY)
+    elif channels_num == 1:
+        gray = src_image.copy()
+    else:
+        raise ValueError(f"Input image {src_path} has {channels_num} channels")
 
     ret, mask_first = cv2.threshold(gray, 254, 1, cv2.THRESH_BINARY_INV)
 
