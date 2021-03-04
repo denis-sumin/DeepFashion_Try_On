@@ -216,6 +216,13 @@ def make_one_label_vis(src_path: str, dst_path: str) -> None:
     image.save(dst_path)
 
 
+def make_one_edge_vis(src_cloth_path: str, src_edge_path: str, dst_path: str) -> None:
+    image_cloth = imageio.imread(src_cloth_path)
+    image_edge = imageio.imread(src_edge_path)
+    image_cloth[image_edge == 0] = 128
+    imageio.imwrite(dst_path, image_cloth)
+
+
 def process_one_pose_file(src_path: str, dst_path: str) -> None:
     with open(src_path, "r") as f:
         pose_data = json.load(f)
@@ -294,6 +301,10 @@ def merge_labels_atr_lip(src_atr_dir: str, src_lip_dir: str, dst_dir: str) -> No
 
 def make_labels_vis(src_dir: str, dst_dir: str) -> None:
     process_many_files(make_one_label_vis, src_dir, dst_dir, (".png",), ".png")
+
+
+def make_edge_vis(src_cloth_dir: str, src_edge_dir: str, dst_dir: str) -> None:
+    process_many_files(make_one_edge_vis, [src_cloth_dir, src_edge_dir], dst_dir, (".png",), ".png")
 
 
 def process_pose_files(src_dir: str, dst_dir: str) -> None:
@@ -454,6 +465,10 @@ def main():
     print("Generating cloths masks...")
     edges_dst_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge"))
     prepare_cloth_masks(cloths_img_dir, edges_dst_dir)
+
+    print("Creating edge visualizations...")
+    edges_vis_dir = os.path.abspath(os.path.join(args.dataset_dir, f"{args.prefix}_edge_vis"))
+    make_edge_vis(cloths_img_dir, edges_dst_dir, edges_vis_dir)
 
     dirs_suffix = {
         "cloths": (cloths_img_dir, ".jpg"),
