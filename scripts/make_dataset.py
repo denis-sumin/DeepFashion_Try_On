@@ -73,12 +73,11 @@ all_products_file = sys.argv[1]
 dataset_root = sys.argv[2]
 dataset_target_root = sys.argv[3]
 dataset_target_items = int(sys.argv[4])
+category = sys.argv[5]
+gender = sys.argv[6]
 
 with open(all_products_file, "r") as f:
     all_products = json.load(f)
-
-category = "tops"
-gender = "female"
 
 products_tops = {
     key: value
@@ -94,7 +93,7 @@ os.makedirs(cloth_photo_dir, exist_ok=True)
 dataset_target_items = min(dataset_target_items, len(products_tops))
 products_tops = {key: item for idx, (key, item) in enumerate(products_tops.items()) if idx < dataset_target_items}
 
-with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+with multiprocessing.Pool(multiprocessing.cpu_count() * 2) as pool:
     results = pool.imap_unordered(process_one_item, products_tops.items())
 
     paths_map = {}
@@ -104,5 +103,5 @@ with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
             continue
         paths_map[key] = result_item
 
-with open("dataset_paths_map.json", "w") as f:
+with open(os.path.join(dataset_target_root, "dataset_paths_map.json"), "w") as f:
     json.dump(paths_map, f)
