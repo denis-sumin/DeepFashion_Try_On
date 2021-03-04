@@ -20,7 +20,7 @@ def process_one_item(item):
     cloth_image_path = os.path.join(src_dataset_dir, f"{cloth_image_id}_{os.path.split(cloth_image_url)[-1]}")
     try:
         cloth_image = imageio.imread(cloth_image_path)
-    except OSError:
+    except (OSError, ValueError):
         return key, None
     cloth_image = cv2.resize(cloth_image, dsize=(192, 256), interpolation=cv2.INTER_AREA)
 
@@ -29,7 +29,7 @@ def process_one_item(item):
     person_image_1_path = os.path.join(src_dataset_dir, f"{person_image_1_id}_{os.path.split(person_image_1_url)[-1]}")
     try:
         person_image_1 = imageio.imread(person_image_1_path)
-    except OSError:
+    except (OSError, ValueError):
         return key, None
     person_image_1 = cv2.resize(person_image_1, dsize=(192, 256), interpolation=cv2.INTER_AREA)
     imageio.imwrite(os.path.join(model_photo_dir, f"{key}_0.jpg"), person_image_1, quality=97)
