@@ -287,7 +287,7 @@ def process_many_files(
 
 
 def prepare_cloth_masks(src_dir: str, dst_dir: str) -> None:
-    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".png")
+    process_many_files(prepare_one_cloth_mask, src_dir, dst_dir, (".jpg",), ".jpg")
 
 
 def process_label_files(segmentation: Type[SegmentationVariant], src_dir: str, dst_dir: str) -> None:
@@ -304,7 +304,7 @@ def make_labels_vis(src_dir: str, dst_dir: str) -> None:
 
 
 def make_edge_vis(src_cloth_dir: str, src_edge_dir: str, dst_dir: str) -> None:
-    process_many_files(make_one_edge_vis, [src_cloth_dir, src_edge_dir], dst_dir, (".png",), ".png")
+    process_many_files(make_one_edge_vis, [src_cloth_dir, src_edge_dir], dst_dir, (".jpg",), ".jpg")
 
 
 def process_pose_files(src_dir: str, dst_dir: str) -> None:
