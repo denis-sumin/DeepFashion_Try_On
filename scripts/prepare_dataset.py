@@ -180,7 +180,10 @@ def prepare_one_cloth_mask(src_path: str, dst_path: str) -> None:
 
     output_mask = mask.astype("uint8") * 255
 
-    imageio.imwrite(dst_path, output_mask)
+    if dst_path.endswith("jpg"):
+        imageio.imwrite(dst_path, output_mask, quality=98)
+    else:
+        imageio.imwrite(dst_path, output_mask)
 
 
 def process_one_label_file(segmentation: SegmentationVariant, src_path: str, dst_path: str) -> None:
@@ -219,7 +222,7 @@ def make_one_label_vis(src_path: str, dst_path: str) -> None:
 def make_one_edge_vis(src_cloth_path: str, src_edge_path: str, dst_path: str) -> None:
     image_cloth = imageio.imread(src_cloth_path)
     image_edge = imageio.imread(src_edge_path)
-    image_cloth[image_edge < 10] = 128
+    image_cloth[image_edge < 100] = 128
     imageio.imwrite(dst_path, image_cloth)
 
 
