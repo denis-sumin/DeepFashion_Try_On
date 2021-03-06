@@ -329,6 +329,7 @@ class Pix2PixHDModel(BaseModel):
         arm_label = self.G1.refine(G1_in)
 
         arm_label = self.sigmoid(arm_label)
+        G1_out = arm_label
         CE_loss = self.cross_entropy2d(arm_label, (label * (1 - clothes_mask)).transpose(0, 1)[0].long()) * 10
 
         armlabel_map = generate_discrete_label(arm_label.detach(), 14, False)
@@ -336,6 +337,7 @@ class Pix2PixHDModel(BaseModel):
         G2_in = torch.cat([pre_clothes_mask, clothes, dis_label, pose, self.gen_noise(shape)], 1)
         fake_cl = self.G2.refine(G2_in)
         fake_cl = self.sigmoid(fake_cl)
+        G2_out = fake_cl
         CE_loss += self.BCE(fake_cl, clothes_mask) * 10
 
         fake_cl_dis = torch.FloatTensor((fake_cl.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
@@ -359,7 +361,9 @@ class Pix2PixHDModel(BaseModel):
         armlabel_map *= 1 - fake_cl_dis
         dis_label = encode(armlabel_map, armlabel_map.shape)
 
+        Unet_in = (clothes, fake_cl_dis, pre_clothes_mask, grid)
         fake_c, warped, warped_mask, warped_grid = self.Unet(clothes, fake_cl_dis, pre_clothes_mask, grid)
+        Unet_out = (fake_c, warped, warped_mask, warped_grid)
         mask = fake_c[:, 3, :, :]
         mask = self.sigmoid(mask) * fake_cl_dis
         fake_c = self.tanh(fake_c[:, 0:3, :, :])
@@ -376,6 +380,7 @@ class Pix2PixHDModel(BaseModel):
         G_in = torch.cat([img_hole_hand, dis_label, fake_c, skin_color, self.gen_noise(shape)], 1)
         fake_image = self.G.refine(G_in.detach())
         fake_image = self.tanh(fake_image)
+        G_out = fake_image
 
         loss_D_fake = 0
         loss_D_real = 0
@@ -398,6 +403,10 @@ class Pix2PixHDModel(BaseModel):
             CE_loss,
             real_image,
             warped_grid,
+            (G1_in, G1_out),
+            (G2_in, G2_out),
+            (Unet_in, Unet_out),
+            (G_in, G_out),
         ]
 
     def inference(self, label, label_ref, image_ref):

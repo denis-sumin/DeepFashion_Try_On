@@ -147,6 +147,10 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             CE_loss,
             rgb,
             alpha,
+            (G1_in, G1_out),
+            (G2_in, G2_out),
+            (Unet_in, Unet_out),
+            (G_in, G_out),
         ) = model(
             Variable(data["label"].cuda()),  # label
             Variable(data["edge"].cuda()),  # pre_clothes_mask
