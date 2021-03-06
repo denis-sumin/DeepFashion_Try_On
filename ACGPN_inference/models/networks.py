@@ -675,8 +675,8 @@ class UnetMask(nn.Module):
             ]
         )
 
-    def forward(self, input, refer, mask):
-        input, warped_mask, rx, ry, cx, cy, rg, cg = self.stn(input, torch.cat([mask, refer, input], 1), mask)
+    def forward(self, input, refer, mask, grid):
+        input, warped_mask, rx, ry, cx, cy, rg, cg = self.stn(input, torch.cat([mask, refer, input], 1), mask, grid)
         # ipdb.set_trace()# print(input.shape)
 
         conv1 = self.conv1(torch.cat([refer.detach(), input.detach()], 1))
