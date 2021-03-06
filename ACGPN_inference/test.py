@@ -147,8 +147,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             CE_loss,
             rgb,
             alpha,
-            (G1_in, G1_out),
-            (G2_in, G2_out),
+            (G1_in, G1_out, G1_loss),
+            (G2_in, G2_out, G2_loss),
             (Unet_in, Unet_out),
             (G_in, G_out),
         ) = model(
