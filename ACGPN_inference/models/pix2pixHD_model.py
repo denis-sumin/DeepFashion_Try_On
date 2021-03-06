@@ -330,14 +330,16 @@ class Pix2PixHDModel(BaseModel):
 
         arm_label = self.sigmoid(arm_label)
         G1_out = arm_label
+        G1_loss = self.cross_entropy2d(arm_label, (label * (1 - clothes_mask)).transpose(0, 1)[0].long())
         CE_loss = self.cross_entropy2d(arm_label, (label * (1 - clothes_mask)).transpose(0, 1)[0].long()) * 10
 
         armlabel_map = generate_discrete_label(arm_label.detach(), 14, False)
         dis_label = generate_discrete_label(arm_label.detach(), 14)
-        G2_in = torch.cat([pre_clothes_mask, clothes, dis_label, pose, self.gen_noise(shape)], 1)
+        G2_in = torch.cat([pre_clothes_mask, clothes, masked_label, pose, self.gen_noise(shape)], 1)
         fake_cl = self.G2.refine(G2_in)
         fake_cl = self.sigmoid(fake_cl)
         G2_out = fake_cl
+        G2_loss = self.BCE(fake_cl, clothes_mask)
         CE_loss += self.BCE(fake_cl, clothes_mask) * 10
 
         fake_cl_dis = torch.FloatTensor((fake_cl.detach().cpu().numpy() > 0.5).astype(np.float)).cuda()
@@ -361,9 +363,13 @@ class Pix2PixHDModel(BaseModel):
         armlabel_map *= 1 - fake_cl_dis
         dis_label = encode(armlabel_map, armlabel_map.shape)
 
-        Unet_in = (clothes, fake_cl_dis, pre_clothes_mask, grid)
-        fake_c, warped, warped_mask, warped_grid = self.Unet(clothes, fake_cl_dis, pre_clothes_mask, grid)
-        Unet_out = (fake_c, warped, warped_mask, warped_grid)
+        Unet_in = (clothes, clothes_mask, pre_clothes_mask)
+        fake_c, warped, warped_mask, rx, ry, cx, cy, rg, cg = self.Unet(clothes, clothes_mask, pre_clothes_mask)
+        Unet_out = (fake_c, warped, warped_mask, rx, ry, cx, cy, rg, cg)
+
+        composition_mask = fake_c[:, 3, :, :]
+        composition_mask = self.sigmoid(composition_mask)
+
         mask = fake_c[:, 3, :, :]
         mask = self.sigmoid(mask) * fake_cl_dis
         fake_c = self.tanh(fake_c[:, 0:3, :, :])
@@ -377,7 +383,16 @@ class Pix2PixHDModel(BaseModel):
         )
         img_hole_hand = img_fore * (1 - clothes_mask) * occlude * (1 - fake_cl_dis)
 
-        G_in = torch.cat([img_hole_hand, dis_label, fake_c, skin_color, self.gen_noise(shape)], 1)
+        G_in = torch.cat(
+            [
+                img_hole_hand,
+                masked_label,
+                real_image * clothes_mask,
+                skin_color,
+                self.gen_noise(shape),
+            ],
+            1,
+        )
         fake_image = self.G.refine(G_in.detach())
         fake_image = self.tanh(fake_image)
         G_out = fake_image
@@ -385,9 +400,26 @@ class Pix2PixHDModel(BaseModel):
         loss_D_fake = 0
         loss_D_real = 0
         loss_G_GAN = 0
-        loss_G_VGG = 0
 
-        L1_loss = 0
+        comp_fake_c = (
+            fake_c.detach() * (1 - composition_mask).unsqueeze(1) + (composition_mask.unsqueeze(1)) * warped.detach()
+        )
+
+        # VGG feature matching loss
+        loss_G_VGG = 0
+        loss_G_VGG += (
+            self.criterionVGG.warp(warped, real_image * clothes_mask)
+            + self.criterionVGG.warp(comp_fake_c, real_image * clothes_mask) * 10
+        )
+        loss_G_VGG += self.criterionVGG.warp(fake_c, real_image * clothes_mask) * 20
+        loss_G_VGG += self.criterionVGG(fake_image, real_image) * 10
+
+        L1_loss = self.criterionFeat(fake_image, real_image)
+        #
+        L1_loss += self.criterionFeat(warped_mask, clothes_mask) + self.criterionFeat(warped, real_image * clothes_mask)
+        L1_loss += self.criterionFeat(fake_c, real_image * clothes_mask) * 0.2
+        L1_loss += self.criterionFeat(comp_fake_c, real_image * clothes_mask) * 10
+        L1_loss += self.criterionFeat(composition_mask, clothes_mask)
 
         style_loss = L1_loss
 
@@ -402,9 +434,9 @@ class Pix2PixHDModel(BaseModel):
             fake_cl,
             CE_loss,
             real_image,
-            warped_grid,
-            (G1_in, G1_out),
-            (G2_in, G2_out),
+            # warped_grid,
+            (G1_in, G1_out, G1_loss),
+            (G2_in, G2_out, G2_loss),
             (Unet_in, Unet_out),
             (G_in, G_out),
         ]
