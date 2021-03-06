@@ -193,9 +193,9 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             loss_dict["G_GAN"]
             + loss_dict.get("G_GAN_Feat", 0)
             + loss_dict.get("G_VGG", 0)
-            + torch.mean(#L1_loss +
+            + torch.mean(  # L1_loss +
                 CE_loss
-                #+ rx + ry + cx + cy + rg + cg
+                # + rx + ry + cx + cy + rg + cg
             )
         )
 

@@ -2,18 +2,17 @@ import json
 import os
 import time
 
-import cv2
 import imageio
 import numpy as np
 import torch
 import util.util as util
 from models.models import create_model
+from models.pix2pixHD_model import generate_discrete_label
 from options.train_options import TrainOptions
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 
 from data.data_loader import CreateDataLoader
-from models.pix2pixHD_model import generate_discrete_label
 
 writer = SummaryWriter("runs/G1G2")
 SIZE = 320
@@ -217,34 +216,31 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         G1_in_cpu = G1_in.detach().cpu()
         G1_in_cloth_mask = G1_in_cpu[:, 0]
         G1_in_cloth_image = G1_in_cpu[:, 1:4]
-        G1_in_label = G1_in_cpu[:, 4:4 + NC]
-        G1_in_pose = G1_in_cpu[:, 4 + NC:-1]
+        G1_in_label = G1_in_cpu[:, 4 : 4 + NC]
+        G1_in_pose = G1_in_cpu[:, 4 + NC : -1]
         G1_in_noise = G1_in_cpu[:, -1]
 
         G1_in_label_vis = generate_label_color(generate_label_plain(G1_in_label))
         G1_in_pose_vis = generate_label_color(
-            generate_discrete_label(G1_in_pose, G1_in_pose.shape[1], False),
-            G1_in_pose.shape[1]
+            generate_discrete_label(G1_in_pose, G1_in_pose.shape[1], False), G1_in_pose.shape[1]
         )
 
         for name, tensor, put_palette in (
             ("source_image", data["image"], False),
             ("source_label", generate_label_color(data["label"]), False),
-
             ("G1_in_1", G1_in_cloth_mask, False),
             ("G1_in_2", G1_in_cloth_image, False),
             ("G1_in_3", G1_in_label_vis, False),
             ("G1_in_4", G1_in_pose_vis, False),
             ("G1_in_5", G1_in_noise, False),
-
             ("G1_out", generate_label_color(generate_label_plain(input_label)), False),
-            ("G1_gt", generate_label_color((data["label"] * (1 - mask_clothes))), False)
+            ("G1_gt", generate_label_color((data["label"] * (1 - mask_clothes))), False),
         ):
             d_image = tensor.squeeze().numpy().copy()
             if len(d_image.shape) == 3:
                 d_image = np.moveaxis(d_image, 0, -1)
             if not put_palette:
-                d_image = (d_image + 1.) / 2. * 255
+                d_image = (d_image + 1.0) / 2.0 * 255
             d_image = d_image.astype(np.uint8)
             # print(image.shape, image.dtype)
 
