@@ -364,8 +364,8 @@ class Pix2PixHDModel(BaseModel):
         dis_label = encode(armlabel_map, armlabel_map.shape)
 
         Unet_in = (clothes, clothes_mask, pre_clothes_mask, grid)
-        fake_c, warped, warped_mask, rx, ry, cx, cy, rg, cg = self.Unet(clothes, clothes_mask, pre_clothes_mask, grid)
-        Unet_out = (fake_c, warped, warped_mask, rx, ry, cx, cy, rg, cg)
+        fake_c, warped, warped_mask, rx, ry, cx, cy, warped_grid = self.Unet(clothes, clothes_mask, pre_clothes_mask, grid)
+        Unet_out = (fake_c, warped, warped_mask, rx, ry, cx, cy, warped_grid)
 
         composition_mask = fake_c[:, 3, :, :]
         composition_mask = self.sigmoid(composition_mask)
@@ -434,7 +434,7 @@ class Pix2PixHDModel(BaseModel):
             fake_cl,
             CE_loss,
             real_image,
-            # warped_grid,
+            warped_grid,
             (G1_in, G1_out, G1_loss),
             (G2_in, G2_out, G2_loss),
             (Unet_in, Unet_out),

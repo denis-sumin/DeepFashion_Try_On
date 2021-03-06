@@ -146,7 +146,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             clothes_mask,
             CE_loss,
             rgb,
-            # alpha,
+            alpha,
             (G1_in, G1_out),
             (G2_in, G2_out),
             (Unet_in, Unet_out),
