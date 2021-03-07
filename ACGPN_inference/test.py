@@ -241,6 +241,9 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         G2_in_pose = G2_in_cpu[:, 4 + 14:-1]
         G2_in_noise = G2_in_cpu[:, -1]
 
+        Unet_clothes, Unet_clothes_mask, Unet_pre_clothes_mask, Unet_grid = Unet_in
+        fake_c, warped, warped_mask, rx, ry, cx, cy, warped_grid = Unet_out
+
         Unet_clothes_cpu = Unet_clothes.cpu()
         Unet_clothes_mask_cpu = Unet_clothes_mask.cpu()
         Unet_pre_clothes_mask_cpu = Unet_pre_clothes_mask.cpu()
