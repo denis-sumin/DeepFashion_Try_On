@@ -311,10 +311,10 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             imageio.imwrite(output_filepath, vis_image)
 
         losses_mapping[data["name"][0]] = {
-            "L1_loss": L1_loss,
-            "CE_loss": CE_loss,
-            "G1_loss": G1_loss,
-            "G2_loss": G2_loss,
+            "L1_loss": float(L1_loss),
+            "CE_loss": float(CE_loss),
+            "G1_loss": float(G1_loss),
+            "G2_loss": float(G2_loss),
         }
 
         ### display output images
