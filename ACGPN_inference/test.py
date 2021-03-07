@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import util.util as util
 from models.models import create_model
+from models.pix2pixHD_model import generate_discrete_label
 from options.train_options import TrainOptions
 from tensorboardX import SummaryWriter
 from torch.autograd import Variable
