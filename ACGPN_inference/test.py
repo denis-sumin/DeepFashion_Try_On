@@ -305,7 +305,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         }
 
         for vis_name, vis_image in output_vis_mapping.items():
-            output_filepath = os.path.join(opt.results_dir, vis_name + "_" + data["name"][0])
+            output_filepath = os.path.join(opt.results_dir, vis_name + "_" + data["name"][0]).replace(".jpg", ".png")
+            vis_image = make_vis(vis_image)
             imageio.imwrite(output_filepath, vis_image)
 
         ### display output images
