@@ -310,6 +310,13 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             vis_image = make_vis(vis_image)
             imageio.imwrite(output_filepath, vis_image)
 
+        losses_mapping[data["name"][0]] = {
+            "L1_loss": L1_loss,
+            "CE_loss": CE_loss,
+            "G1_loss": G1_loss,
+            "G2_loss": G2_loss,
+        }
+
         ### display output images
         # a = generate_label_color(generate_label_plain(input_label)).float().cuda()
         # b = real_image.float().cuda()
@@ -335,8 +342,8 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
         if epoch_iter >= dataset_size:
             break
 
-    with open(os.path.join(opt.results_dir, "ce_losses.json"), "w") as f:
-        json.dump(ce_loss_values, f)
+    with open(os.path.join(opt.results_dir, "losses.json"), "w") as f:
+        json.dump(losses_mapping, f)
 
     # end of epoch
     iter_end_time = time.time()
