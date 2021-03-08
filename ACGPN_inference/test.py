@@ -215,8 +215,7 @@ for epoch in range(start_epoch, opt.niter + opt.niter_decay + 1):
             image = tensor.squeeze().numpy().copy()
             if len(image.shape) == 3:
                 image = np.moveaxis(image, 0, -1)
-            # if not put_palette:
-            #     image = (image + 1.) / 2. * 255
+            image = (image + 1.) / 2. * 255
             return image.astype(np.uint8)
 
 
