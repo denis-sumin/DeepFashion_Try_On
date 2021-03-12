@@ -398,7 +398,7 @@ class Pix2PixHDModel(BaseModel):
             torch.cat([clothes_mask, clothes], 1),
         ]  ##fake_cl_dis to replace
         # ipdb.set_trace()
-        real_pool = [masked_label, clothes_mask, real_image, real_image * clothes_mask]
+        real_pool = [input_label, clothes_mask, real_image, real_image * clothes_mask]
         fake_pool = [arm_label, fake_cl, fake_image, fake_c]
         D_pool = [self.D1, self.D2, self.D, self.D3]
         pool_lenth = len(fake_pool)
