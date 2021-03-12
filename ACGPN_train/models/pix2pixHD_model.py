@@ -337,7 +337,7 @@ class Pix2PixHDModel(BaseModel):
         armlabel_map = generate_discrete_label(arm_label.detach(), 14, False)
         dis_label = generate_discrete_label(arm_label.detach(), 14)
 
-        G2_in = torch.cat([pre_clothes_mask, clothes, masked_label, pose, self.gen_noise(shape)], 1)
+        G2_in = torch.cat([pre_clothes_mask, clothes, input_label, pose, self.gen_noise(shape)], 1)
         fake_cl = self.G2.refine(G2_in)
         fake_cl = self.sigmoid(fake_cl)
         CE_loss += self.BCE(fake_cl, clothes_mask) * 10
