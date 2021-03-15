@@ -71,12 +71,14 @@ def compose(label, mask, color_mask, edge, color, noise):
 
 def changearm(old_label):
     label = old_label
+    cloth = torch.FloatTensor((data["label"].cpu().numpy() == 4).astype(np.int))
     arm1 = torch.FloatTensor((data["label"].cpu().numpy() == 11).astype(np.int))
     arm2 = torch.FloatTensor((data["label"].cpu().numpy() == 13).astype(np.int))
     noise = torch.FloatTensor((data["label"].cpu().numpy() == 7).astype(np.int))
-    label = label * (1 - arm1) + arm1 * 4
-    label = label * (1 - arm2) + arm2 * 4
-    label = label * (1 - noise) + noise * 4
+    label = label * (1 - cloth) + cloth * 0
+    label = label * (1 - arm1) + arm1 * 0
+    label = label * (1 - arm2) + arm2 * 0
+    label = label * (1 - noise) + noise * 0
     return label
 
 
