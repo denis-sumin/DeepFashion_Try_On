@@ -132,9 +132,9 @@ class Pix2PixHDModel(BaseModel):
         with torch.no_grad():
             pass
         self.Unet = networks.define_UnetMask(4, self.gpu_ids)
-        self.G1 = networks.define_Refine(37, 14, self.gpu_ids)
-        self.G2 = networks.define_Refine(19 + 18, 1, self.gpu_ids)
-        self.G = networks.define_Refine(24, 3, self.gpu_ids)
+        self.G1 = networks.define_GeneratorUNet(37, 14, self.gpu_ids)
+        self.G2 = networks.define_GeneratorUNet(19 + 18, 1, self.gpu_ids)
+        self.G = networks.define_GeneratorUNet(24, 3, self.gpu_ids)
         # ipdb.set_trace()
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
